@@ -35,7 +35,18 @@ func main() {
 	for i := range left {
 		distance += abs(left[i] - right[i])
 	}
-	fmt.Printf("%d\n", distance)
+	fmt.Printf("part 1; difference: %d\n", distance)
+
+	similarity := 0
+	for _, val := range left {
+		foundIdx := find(val, right)
+		if foundIdx == -1 {
+			continue
+		}
+		count := countOccurrences(foundIdx, right)
+		similarity += val * count
+	}
+	fmt.Printf("part 2; similarity: %d\n", similarity)
 }
 
 func mustParseInt(raw string) int {
@@ -51,4 +62,50 @@ func abs(val int) int {
 		return val * -1
 	}
 	return val
+}
+
+// find returns the index of the value in sortedList or '-1' if it doesn't exist
+func find(val int, sortedList []int) int {
+	lower := 0
+	upper := len(sortedList) - 1
+	pivot := 0
+
+	for {
+		newPivot := lower + (upper-lower)/2
+		if newPivot == pivot {
+			return -1
+		}
+		pivot = newPivot
+
+		if sortedList[pivot] == val {
+			return pivot
+		} else if sortedList[pivot] > val {
+			// search first half
+			upper = pivot
+		} else {
+			lower = pivot
+		}
+	}
+}
+
+func countOccurrences(idx int, sortedList []int) int {
+	count := 1
+
+	// Count earlier same-values
+	for i := idx - 1; i > 0; i-- {
+		if sortedList[i] != sortedList[idx] {
+			break
+		}
+		count++
+	}
+
+	// Count later same-values
+	for i := idx + 1; i < len(sortedList); i++ {
+		if sortedList[i] != sortedList[idx] {
+			break
+		}
+		count++
+	}
+
+	return count
 }
