@@ -11,20 +11,42 @@ import (
 
 func main() {
 	safeCount := 0
+	safeDampenedCount := 0
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		line := scanner.Text()
 		levels := strings.Fields(line)
+
 		safe, err := isSafe(levels)
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
 		if safe {
 			safeCount++
+			safeDampenedCount++
 		}
 		log.Printf("%t: %v", safe, levels)
+
+		if !safe {
+			for i := range levels {
+				iRemoved := removeCopy(levels, i)
+				safe, err := isSafe(iRemoved)
+				if err != nil {
+					log.Fatalf("%v", err)
+				}
+				log.Printf("%v dampened %t: %v", levels, safe, iRemoved)
+				if safe {
+					safeDampenedCount++
+					break
+				}
+			}
+		}
+
 	}
+
 	fmt.Printf("part 1: %d\n", safeCount)
+	fmt.Printf("part 2: %d\n", safeDampenedCount)
 }
 
 func isSafe(levels []string) (bool, error) {
@@ -40,13 +62,13 @@ func isSafe(levels []string) (bool, error) {
 		diff := previous - current
 		absDiff := abs(diff)
 		if absDiff < 1 || absDiff > 3 {
-			log.Printf("absDiff index %d: %d", i, absDiff)
+			//log.Printf("absDiff index %d: %d", i, absDiff)
 			return false, nil
 		}
 		currentIncreasing := diff < 0
 
 		if i > 1 && (currentIncreasing != previousIncreasing) {
-			log.Printf("curentIncreasing: %t, previousIncreasting: %t", currentIncreasing, previousIncreasing)
+			//log.Printf("curentIncreasing: %t, previousIncreasting: %t", currentIncreasing, previousIncreasing)
 			return false, nil
 		}
 
@@ -70,4 +92,15 @@ func abs(val int) int {
 		return val * -1
 	}
 	return val
+}
+
+func removeCopy(slice []string, i int) []string {
+	result := make([]string, 0, len(slice)-1)
+	for idx := range slice {
+		if idx == i {
+			continue
+		}
+		result = append(result, slice[idx])
+	}
+	return result
 }
