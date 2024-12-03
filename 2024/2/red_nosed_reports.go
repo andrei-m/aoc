@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
+
+	"github.com/andrei-m/aoc/advent"
 )
 
 func main() {
@@ -53,14 +54,14 @@ func isSafe(levels []string) (bool, error) {
 	if len(levels) == 0 {
 		return true, nil
 	}
-	previous := mustGetInt(levels[0])
+	previous := advent.MustParseInt(levels[0])
 	previousIncreasing := false
 
 	for i := 1; i < len(levels); i++ {
-		current := mustGetInt(levels[i])
+		current := advent.MustParseInt(levels[i])
 
 		diff := previous - current
-		absDiff := abs(diff)
+		absDiff := advent.Abs(diff)
 		if absDiff < 1 || absDiff > 3 {
 			//log.Printf("absDiff index %d: %d", i, absDiff)
 			return false, nil
@@ -72,26 +73,11 @@ func isSafe(levels []string) (bool, error) {
 			return false, nil
 		}
 
-		previous = mustGetInt(levels[i])
+		previous = current
 		previousIncreasing = currentIncreasing
 	}
 
 	return true, nil
-}
-
-func mustGetInt(raw string) int {
-	val, err := strconv.Atoi(raw)
-	if err != nil {
-		log.Fatalf("not an int %s: %v", raw, err)
-	}
-	return val
-}
-
-func abs(val int) int {
-	if val < 0 {
-		return val * -1
-	}
-	return val
 }
 
 func removeCopy(slice []string, i int) []string {

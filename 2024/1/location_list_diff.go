@@ -6,8 +6,9 @@ import (
 	"log"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
+
+	"github.com/andrei-m/aoc/advent"
 )
 
 func main() {
@@ -21,8 +22,8 @@ func main() {
 			log.Fatalf("malformed line: %s", line)
 		}
 
-		left = append(left, mustParseInt(elements[0]))
-		right = append(right, mustParseInt(elements[1]))
+		left = append(left, advent.MustParseInt(elements[0]))
+		right = append(right, advent.MustParseInt(elements[1]))
 	}
 	if scanner.Err() != nil {
 		log.Fatalf("failed to read input: %v", scanner.Err())
@@ -33,7 +34,7 @@ func main() {
 
 	distance := 0
 	for i := range left {
-		distance += abs(left[i] - right[i])
+		distance += advent.Abs(left[i] - right[i])
 	}
 	fmt.Printf("part 1; difference: %d\n", distance)
 
@@ -47,21 +48,6 @@ func main() {
 		similarity += val * count
 	}
 	fmt.Printf("part 2; similarity: %d\n", similarity)
-}
-
-func mustParseInt(raw string) int {
-	leftInt, err := strconv.Atoi(raw)
-	if err != nil {
-		log.Fatalf("not an int: %s", raw)
-	}
-	return leftInt
-}
-
-func abs(val int) int {
-	if val < 0 {
-		return val * -1
-	}
-	return val
 }
 
 // find returns the index of the value in sortedList or '-1' if it doesn't exist

@@ -1,4 +1,4 @@
-module github.com/andrei-m/aoc/2024/1
+module github.com/andrei-m/aoc
 
 go 1.23.0
 
