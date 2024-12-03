@@ -25,7 +25,6 @@ func main() {
 		}
 		if safe {
 			safeCount++
-			safeDampenedCount++
 		}
 		log.Printf("%t: %v", safe, levels)
 
@@ -47,7 +46,7 @@ func main() {
 	}
 
 	fmt.Printf("part 1: %d\n", safeCount)
-	fmt.Printf("part 2: %d\n", safeDampenedCount)
+	fmt.Printf("part 2: %d\n", safeCount+safeDampenedCount)
 }
 
 func isSafe(levels []string) (bool, error) {
