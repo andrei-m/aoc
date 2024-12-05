@@ -24,6 +24,7 @@ func solve1(puzzle [][]string) {
 	count := 0
 	for y, row := range puzzle {
 		for col := range row {
+			//TODO: it's possible to encode the 'X' (or 'A" in part2 as a part of the vector at index (0, 0); this way, the same algo can be reused aside from the parameterized vectors
 			if puzzle[y][col] == "X" {
 				newMatches, newCount := masCount(puzzle, part1, y, col)
 				if newCount > 0 {
@@ -65,10 +66,10 @@ type vector struct {
 	char      string
 }
 
-// all vectors in a 'MAS' match need to hit for the match to be considered
+// all vectors in a 'MAS' match need to match for the match to be considered (conjunction)
 type masMatch []vector
 
-// each of the opportunities countes as one 'MAS' count
+// each of the opportunities countes as one 'MAS' count (disjunction, with each possibility counting as one match)
 var (
 	part1 = []masMatch{
 		{
