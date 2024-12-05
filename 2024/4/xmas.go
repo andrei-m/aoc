@@ -15,16 +15,38 @@ func main() {
 		puzzle = append(puzzle, strings.Split(scanner.Text(), ""))
 	}
 
+	matches := [][]int{}
 	count := 0
-	for row := range puzzle {
+	for y, row := range puzzle {
 		for col := range row {
-			if puzzle[row][col] == "X" {
-				count += masCount(puzzle, row, col)
+			if puzzle[y][col] == "X" {
+				newMatches, newCount := masCount(puzzle, y, col)
+				if newCount > 0 {
+					matches = append(matches, []int{y, col})
+					matches = append(matches, newMatches...)
+					count += newCount
+				}
 			}
 		}
 	}
 
-	fmt.Printf("part 1: %d", count)
+	debug := make([][]string, len(puzzle))
+	for i := range puzzle {
+		debug[i] = make([]string, len(puzzle[i]))
+
+		for j := range puzzle[i] {
+			debug[i][j] = "."
+		}
+	}
+	for _, match := range matches {
+		debug[match[0]][match[1]] = puzzle[match[0]][match[1]]
+	}
+
+	for _, row := range debug {
+		fmt.Println(strings.Join(row, ""))
+	}
+
+	fmt.Printf("count: %d", count)
 }
 
 type vector struct {
@@ -88,7 +110,8 @@ var opportunities = []masMatch{
 	},
 }
 
-func masCount(puzzle [][]string, row int, col int) int {
+func masCount(puzzle [][]string, row int, col int) ([][]int, int) {
+	matches := [][]int{}
 	count := 0
 	for _, opt := range opportunities {
 		eligible := true
@@ -117,8 +140,11 @@ func masCount(puzzle [][]string, row int, col int) int {
 
 		if eligible {
 			count++
+			for _, v := range opt {
+				matches = append(matches, []int{row + v.rowOffset, col + v.colOffset})
+			}
 		}
 	}
 
-	return count
+	return matches, count
 }
