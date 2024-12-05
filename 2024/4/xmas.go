@@ -35,22 +35,7 @@ func solve1(puzzle [][]string) {
 		}
 	}
 
-	debug := make([][]string, len(puzzle))
-	for i := range puzzle {
-		debug[i] = make([]string, len(puzzle[i]))
-
-		for j := range puzzle[i] {
-			debug[i][j] = "."
-		}
-	}
-	for _, match := range matches {
-		debug[match[0]][match[1]] = puzzle[match[0]][match[1]]
-	}
-
-	for _, row := range debug {
-		fmt.Println(strings.Join(row, ""))
-	}
-
+	debug(puzzle, matches)
 	fmt.Printf("count: %d", count)
 }
 
@@ -70,22 +55,7 @@ func solve2(puzzle [][]string) {
 		}
 	}
 
-	debug := make([][]string, len(puzzle))
-	for i := range puzzle {
-		debug[i] = make([]string, len(puzzle[i]))
-
-		for j := range puzzle[i] {
-			debug[i][j] = "."
-		}
-	}
-	for _, match := range matches {
-		debug[match[0]][match[1]] = puzzle[match[0]][match[1]]
-	}
-
-	for _, row := range debug {
-		fmt.Println(strings.Join(row, ""))
-	}
-
+	debug(puzzle, matches)
 	fmt.Printf("count: %d\n", count)
 }
 
@@ -220,4 +190,22 @@ func masCount(puzzle [][]string, opportunities []masMatch, row int, col int) ([]
 	}
 
 	return matches, count
+}
+
+func debug(puzzle [][]string, matches [][]int) {
+	out := make([][]string, len(puzzle))
+	for i := range puzzle {
+		out[i] = make([]string, len(puzzle[i]))
+
+		for j := range puzzle[i] {
+			out[i][j] = "."
+		}
+	}
+	for _, match := range matches {
+		out[match[0]][match[1]] = puzzle[match[0]][match[1]]
+	}
+
+	for _, row := range out {
+		fmt.Println(strings.Join(row, ""))
+	}
 }
