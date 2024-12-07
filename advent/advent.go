@@ -19,3 +19,12 @@ func Abs(val int) int {
 	}
 	return val
 }
+
+func IntSliceContains(sl []int, val int) bool {
+	for i := range sl {
+		if sl[i] == val {
+			return true
+		}
+	}
+	return false
+}
