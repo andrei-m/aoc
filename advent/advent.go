@@ -1,7 +1,9 @@
 package advent
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"strconv"
 )
 
@@ -27,4 +29,17 @@ func IntSliceContains(sl []int, val int) bool {
 		}
 	}
 	return false
+}
+
+type Point struct {
+	X int
+	Y int
+}
+
+func (p Point) String() string {
+	return fmt.Sprintf("(%d,%d)", p.X, p.Y)
+}
+
+func DebugEnabled() bool {
+	return len(os.Getenv("DEBUG")) > 0
 }
