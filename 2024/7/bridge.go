@@ -49,6 +49,7 @@ type op int
 const (
 	add op = iota
 	mul
+	concat
 )
 
 func satisfiable(eq equation) bool {
@@ -88,6 +89,13 @@ func eval(eq equation, ops []op) int {
 			result += eq.operands[i+1]
 		} else if op == mul {
 			result = result * eq.operands[i+1]
+		} else if op == concat {
+			concatenated := fmt.Sprintf("%d%d", result, eq.operands[i+1])
+			concatenatedInt, err := strconv.Atoi(concatenated)
+			if err != nil {
+				panic(err)
+			}
+			result = concatenatedInt
 		} else {
 			panic("invalid op is either 'add' nor 'mul'")
 		}
@@ -124,6 +132,10 @@ func printEquation(eq equation, ops []op) {
 			sb.WriteString("+")
 		} else if op == mul {
 			sb.WriteString("*")
+		} else if op == concat {
+			sb.WriteString("||")
+		} else {
+			panic("invalid operator")
 		}
 		sb.WriteString(strconv.Itoa(eq.operands[i+1]))
 	}
