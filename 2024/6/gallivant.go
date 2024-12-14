@@ -147,7 +147,7 @@ func drawMap(pos advent.Point, pointsVisited map[advent.Point][]direction, xOver
 		}
 		fmt.Print("\n")
 	}
-	fmt.Printf("pos: %s, points visited: %d: %d", pos, len(pointsVisited))
+	fmt.Printf("pos: %s, points visited: %d", pos, len(pointsVisited))
 }
 
 func nextMove(pos advent.Point, dir direction) advent.Point {
