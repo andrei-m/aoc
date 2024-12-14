@@ -51,7 +51,7 @@ func main() {
 	addedObstacleLocs := map[advent.Point]struct{}{}
 	for {
 		move := nextMove(guardPosition, dir)
-		if move.X < 0 || move.X == xOverflow || move.Y < 0 || move.Y == y {
+		if !inBounds(move, xOverflow, y) {
 			// exited the area; do not count the point
 			break
 		}
@@ -61,18 +61,12 @@ func main() {
 			dir = nextDirection(dir)
 			continue
 		}
-		// move is OK
+		// next move does not hit an obstacle
 
-		previousDirs, ok := pointsVisited[move]
-		if ok {
-			// Point was visited previously navigating in the **next** direction, so it's a loop candidate
-			loopDirection := nextDirection(dir)
-			if dirSliceContains(previousDirs, loopDirection) {
-				obstacleLoc := nextMove(move, dir)
-				if !(obstacleLoc.X < 0 || obstacleLoc.X == xOverflow || obstacleLoc.Y < 0 || obstacleLoc.Y == y) {
-					addedObstacleLocs[obstacleLoc] = struct{}{}
-				}
-			}
+		// if an obstacle were placed in the next move location, does that create a loop?
+		nextDir := nextDirection(dir)
+		if createsLoop(guardPosition, move, obstacles, nextDir, xOverflow, y) {
+			addedObstacleLocs[move] = struct{}{}
 		}
 
 		// record the move
@@ -84,8 +78,42 @@ func main() {
 			time.Sleep(200 * time.Millisecond)
 		}
 	}
+
+	fmt.Println("--------------------------------------")
+	drawMap(guardPosition, pointsVisited, xOverflow, y, obstacles, addedObstacleLocs)
 	fmt.Printf("part 1: %d\n", len(pointsVisited))
 	fmt.Printf("part 2: %d\n", len(addedObstacleLocs))
+}
+
+func createsLoop(guardPosition advent.Point, newObstacle advent.Point, obstacles map[advent.Point]struct{}, dir direction, xOverflow int, yOverflow int) bool {
+	pointsVisited := map[advent.Point][]direction{
+		guardPosition: {dir},
+	}
+	for {
+		move := nextMove(guardPosition, dir)
+		if !inBounds(move, xOverflow, yOverflow) {
+			// exited the area; do not count the point
+			break
+		}
+		dirs, previouslyVisited := pointsVisited[move]
+		if previouslyVisited && dirSliceContains(dirs, dir) {
+			return true
+		}
+
+		_, hitObstacle := obstacles[move]
+		if hitObstacle || move == newObstacle {
+			dir = nextDirection(dir)
+			continue
+		}
+		guardPosition = move
+		pointsVisited[move] = append(pointsVisited[move], dir)
+	}
+
+	return false
+}
+
+func inBounds(p advent.Point, xOverflow int, yOverflow int) bool {
+	return !(p.X < 0 || p.X >= xOverflow || p.Y < 0 || p.Y >= yOverflow)
 }
 
 func drawMap(pos advent.Point, pointsVisited map[advent.Point][]direction, xOverflow int, yOverflow int, obstacles map[advent.Point]struct{}, addedObstacleLocs map[advent.Point]struct{}) {
