@@ -43,3 +43,8 @@ func (p Point) String() string {
 func DebugEnabled() bool {
 	return len(os.Getenv("DEBUG")) > 0
 }
+
+type Pair[V any] struct {
+	A V
+	B V
+}
