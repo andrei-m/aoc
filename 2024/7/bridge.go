@@ -42,6 +42,14 @@ func main() {
 		}
 	}
 	fmt.Printf("part 1: %d\n", sum)
+
+	sum = 0
+	for _, eq := range equations {
+		if satisfiablePart2(eq) {
+			sum += eq.sum
+		}
+	}
+	fmt.Printf("part 2: %d\n", sum)
 }
 
 type op int
@@ -59,6 +67,39 @@ func satisfiable(eq equation) bool {
 		for j := 0; j < len(ops); j++ {
 			testBit := 1 << j
 			if i&testBit == testBit {
+				ops[j] = mul
+			} else {
+				ops[j] = add
+			}
+		}
+
+		if eval(eq, ops) == eq.sum {
+			printEquation(eq, ops)
+			return true
+		}
+	}
+
+	printUnsatisfiableEquation(eq)
+	return false
+}
+
+func satisfiablePart2(eq equation) bool {
+	ops := make([]op, len(eq.operands)-1)
+
+	// two bits per operation:
+	// 0 0 == also add
+	// 0 1 == mul
+	// 1 0 == add
+	// 1 1 == concat
+	shift := len(ops) * 2
+	for i := 0; i < 1<<shift; i++ {
+		for j := 0; j < len(ops); j++ {
+			testBit0 := 1 << (j * 2)
+			testBit1 := 1 << (j*2 + 1)
+
+			if (i&testBit0 == testBit0) && (i&testBit1 == testBit1) {
+				ops[j] = concat
+			} else if i&testBit0 == testBit0 {
 				ops[j] = mul
 			} else {
 				ops[j] = add
