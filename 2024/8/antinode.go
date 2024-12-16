@@ -46,6 +46,14 @@ func main() {
 		log.Println()
 	}
 	fmt.Printf("part 1: %d\n", len(antinodes))
+
+	/*
+			part 2 outline:
+			For each pair's vector, determine the shortest vector that is still inline
+			- This probably means finding the greatest common divisor between dX & dY, then creating a shorter vector after dividing by that amount
+		 	iterate in increments of that vector, accumulating each point until overflow
+			do the same with the inverse of that vector
+	*/
 }
 
 func pairs(points []advent.Point) []advent.Pair[advent.Point] {
