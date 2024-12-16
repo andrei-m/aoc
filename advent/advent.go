@@ -36,6 +36,24 @@ type Point struct {
 	Y int
 }
 
+func (p Point) Inbounds(xOverflow, yOverflow int) bool {
+	return p.X >= 0 && p.Y >= 0 && p.X < xOverflow && p.Y < yOverflow
+}
+
+type Vector struct {
+	A Point
+	B Point
+}
+
+func InvertVector(v Vector) Vector {
+	dX := v.A.X - v.B.X
+	dY := v.A.Y - v.B.Y
+	return Vector{
+		A: v.A,
+		B: Point{X: v.A.X + dX, Y: v.A.Y + dY},
+	}
+}
+
 func (p Point) String() string {
 	return fmt.Sprintf("(%d,%d)", p.X, p.Y)
 }

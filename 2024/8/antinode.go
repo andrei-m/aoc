@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -30,21 +31,21 @@ func main() {
 		}
 	}
 
+	antinodes := map[advent.Point]struct{}{}
+
 	for freq, ants := range antennas {
 		p := pairs(ants)
+		for _, pair := range p {
+			inverted := advent.InvertVector(advent.Vector(pair))
+			if inverted.B.Inbounds(xOverflow, yOverflow) {
+				antinodes[inverted.B] = struct{}{}
+			}
+		}
 		log.Printf("%s: %v", freq, ants)
 		log.Printf("%v", p)
 		log.Println()
 	}
-	/*
-		For each frequency (antennas key):
-		enumerate pairs of antennas
-		for each pair (A, B):
-		evaluate vectors A->B and B->A
-		invert each vector
-		evaluate the new point relative to origin A or B
-		if not overflowing the map, count the resulting point
-	*/
+	fmt.Printf("part 1: %d\n", len(antinodes))
 }
 
 func pairs(points []advent.Point) []advent.Pair[advent.Point] {
