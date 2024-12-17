@@ -15,13 +15,6 @@ func MustParseInt(raw string) int {
 	return leftInt
 }
 
-func Abs(val int) int {
-	if val < 0 {
-		return val * -1
-	}
-	return val
-}
-
 func IntSliceContains(sl []int, val int) bool {
 	for i := range sl {
 		if sl[i] == val {
@@ -51,6 +44,16 @@ func InvertVector(v Vector) Vector {
 	return Vector{
 		A: v.A,
 		B: Point{X: v.A.X + dX, Y: v.A.Y + dY},
+	}
+}
+
+// TODO: test me
+func AddVector(v1, v2 Vector) Vector {
+	dX := v2.B.X - v2.A.X
+	dY := v2.B.Y - v2.A.Y
+	return Vector{
+		A: v1.A,
+		B: Point{X: v1.B.X + dX, Y: v1.B.Y + dY},
 	}
 }
 

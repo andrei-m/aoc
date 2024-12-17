@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	debug := advent.DebugEnabled()
 	xOverflow := -1
 	yOverflow := 0
 	scanner := bufio.NewScanner(os.Stdin)
@@ -31,29 +32,56 @@ func main() {
 		}
 	}
 
-	antinodes := map[advent.Point]struct{}{}
+	part1Antinodes := map[advent.Point]struct{}{}
+	part2Antinodes := map[advent.Point]struct{}{}
 
 	for freq, ants := range antennas {
 		p := pairs(ants)
+
 		for _, pair := range p {
 			inverted := advent.InvertVector(advent.Vector(pair))
 			if inverted.B.Inbounds(xOverflow, yOverflow) {
-				antinodes[inverted.B] = struct{}{}
+				part1Antinodes[inverted.B] = struct{}{}
 			}
 		}
-		log.Printf("%s: %v", freq, ants)
-		log.Printf("%v", p)
-		log.Println()
-	}
-	fmt.Printf("part 1: %d\n", len(antinodes))
 
-	/*
-			part 2 outline:
-			For each pair's vector, determine the shortest vector that is still inline
-			- This probably means finding the greatest common divisor between dX & dY, then creating a shorter vector after dividing by that amount
-		 	iterate in increments of that vector, accumulating each point until overflow
-			do the same with the inverse of that vector
-	*/
+		if debug {
+			log.Printf("%s: %v", freq, ants)
+			log.Printf("%v", p)
+			log.Println()
+		}
+
+		for _, pair := range p {
+			v := advent.Vector(pair)
+			step := shortenInline(v)
+			for {
+				if v.B.Inbounds(xOverflow, yOverflow) {
+					part2Antinodes[v.B] = struct{}{}
+				} else {
+					break
+				}
+				v = advent.AddVector(v, step)
+			}
+			// The inverse direction is handled by the inverse pair, which is present in 'pairs'
+		}
+	}
+
+	fmt.Printf("part 1: %d\n", len(part1Antinodes))
+	fmt.Printf("part 2: %d\n", len(part2Antinodes))
+}
+
+func shortenInline(v advent.Vector) advent.Vector {
+	dX := v.A.X - v.B.X
+	dY := v.A.Y - v.B.Y
+
+	absDX := advent.Abs(dX)
+	absDY := advent.Abs(dY)
+	gcd := advent.GCD(absDX, absDY)
+
+	return advent.Vector{
+		A: v.A,
+		B: advent.Point{X: v.A.X + dX/gcd, Y: v.A.Y + dY/gcd},
+	}
 }
 
 func pairs(points []advent.Point) []advent.Pair[advent.Point] {
