@@ -54,7 +54,7 @@ func scoreSearch(rows [][]int, pos advent.Point) map[advent.Point]struct{} {
 		nines = mergeMaps(nines, scoreSearch(rows, advent.Point{X: pos.X - 1, Y: pos.Y}))
 	}
 	if pos.X < len(rows[0])-1 && rows[pos.Y][pos.X+1] == currentHeight+1 {
-		nines = mergeMaps(scoreSearch(rows, advent.Point{X: pos.X + 1, Y: pos.Y}), nines)
+		nines = mergeMaps(nines, scoreSearch(rows, advent.Point{X: pos.X + 1, Y: pos.Y}))
 	}
 
 	return nines
