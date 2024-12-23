@@ -126,10 +126,3 @@ func mustParseIntRows() [][]int {
 	}
 	return rows
 }
-
-/*
-type node struct {
-	loc    advent.Point
-	height int
-}
-*/
