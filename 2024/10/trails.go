@@ -29,6 +29,13 @@ func main() {
 	}
 	fmt.Printf("part 1: %d\n", overallScore)
 
+	overallScore = 0
+	for _, t := range trailheads {
+		score := scoreSearchPart2(rows, t)
+		overallScore += score
+		log.Printf("%v: %d", t, score)
+	}
+	fmt.Printf("part 2: %d\n", overallScore)
 }
 
 func score(rows [][]int, trailhead advent.Point) int {
@@ -58,6 +65,29 @@ func scoreSearch(rows [][]int, pos advent.Point) map[advent.Point]struct{} {
 	}
 
 	return nines
+}
+
+func scoreSearchPart2(rows [][]int, pos advent.Point) int {
+	currentHeight := rows[pos.Y][pos.X]
+	if currentHeight == 9 {
+		return 1
+	}
+
+	var up, down, left, right int
+	if pos.Y > 0 && rows[pos.Y-1][pos.X] == currentHeight+1 {
+		up = scoreSearchPart2(rows, advent.Point{X: pos.X, Y: pos.Y - 1})
+	}
+	if pos.Y < len(rows)-1 && rows[pos.Y+1][pos.X] == currentHeight+1 {
+		down = scoreSearchPart2(rows, advent.Point{X: pos.X, Y: pos.Y + 1})
+	}
+	if pos.X > 0 && rows[pos.Y][pos.X-1] == currentHeight+1 {
+		left = scoreSearchPart2(rows, advent.Point{X: pos.X - 1, Y: pos.Y})
+	}
+	if pos.X < len(rows[0])-1 && rows[pos.Y][pos.X+1] == currentHeight+1 {
+		right = scoreSearchPart2(rows, advent.Point{X: pos.X + 1, Y: pos.Y})
+	}
+
+	return up + down + left + right
 }
 
 func mergeMaps(a, b map[advent.Point]struct{}) map[advent.Point]struct{} {
