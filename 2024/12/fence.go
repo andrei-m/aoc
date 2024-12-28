@@ -16,8 +16,10 @@ func main() {
 	// to check for a mergable region, look for the same plant above or to the left of this point. If found, update that region to include this point
 
 	rows := parsePlantRows()
+
 	xOverflow := len(rows[0])
 	yOverflow := len(rows)
+	adjacents = adjacentsFn(xOverflow, yOverflow)
 	log.Printf("x Overflow: %d; yOverflow: %d", xOverflow, yOverflow)
 
 	regions := map[advent.Point]*region{}
@@ -29,7 +31,7 @@ func main() {
 				// location has been discovered in a region search starting from an earlier loc
 				continue
 			}
-			reg := getRegion(loc, rows[y][x], rows, xOverflow, yOverflow)
+			reg := getRegion(loc, rows[y][x], rows)
 			for i := range reg.locs {
 				regions[reg.locs[i]] = &reg
 			}
@@ -44,7 +46,7 @@ func main() {
 
 	var score int
 	for region := range dedupedRegions {
-		score += scoreRegion(*region, xOverflow, yOverflow)
+		score += scoreRegion(*region)
 	}
 	fmt.Printf("%d regions part 1: %d\n", len(dedupedRegions), score)
 }
@@ -54,9 +56,11 @@ type region struct {
 	locs  []advent.Point
 }
 
-func getRegion(loc advent.Point, plant string, plantRows [][]string, xOverflow int, yOverflow int) region {
+var adjacents func(advent.Point) []advent.Point
+
+func getRegion(loc advent.Point, plant string, plantRows [][]string) region {
 	regionLocs := map[advent.Point]struct{}{}
-	searchRegion(loc, plant, plantRows, regionLocs, xOverflow, yOverflow)
+	searchRegion(loc, plant, plantRows, regionLocs)
 
 	locs := make([]advent.Point, 0, len(regionLocs))
 	for k := range regionLocs {
@@ -68,21 +72,21 @@ func getRegion(loc advent.Point, plant string, plantRows [][]string, xOverflow i
 	}
 }
 
-func searchRegion(loc advent.Point, plant string, plantRows [][]string, regionLocs map[advent.Point]struct{}, xOverflow int, yOverflow int) {
+func searchRegion(loc advent.Point, plant string, plantRows [][]string, regionLocs map[advent.Point]struct{}) {
 	if plantRows[loc.Y][loc.X] != plant {
 		return
 	}
 	regionLocs[loc] = struct{}{}
-	for _, adj := range adjacents(loc, xOverflow, yOverflow) {
+	for _, adj := range adjacents(loc) {
 		// avoid infinite recursion when adjacents visit each other
 		_, visited := regionLocs[adj]
 		if !visited {
-			searchRegion(adj, plant, plantRows, regionLocs, xOverflow, yOverflow)
+			searchRegion(adj, plant, plantRows, regionLocs)
 		}
 	}
 }
 
-func scoreRegion(r region, xOverflow int, yOverflow int) int {
+func scoreRegion(r region) int {
 	area := len(r.locs)
 
 	locLookup := make(map[advent.Point]struct{}, area)
@@ -92,7 +96,7 @@ func scoreRegion(r region, xOverflow int, yOverflow int) int {
 
 	var perimeter int
 	for _, loc := range r.locs {
-		adjs := adjacents(loc, xOverflow, yOverflow)
+		adjs := adjacents(loc)
 		if len(adjs) < 4 {
 			// include edges of border locations in the perimeter
 			perimeter += 4 - len(adjs)
@@ -109,25 +113,27 @@ func scoreRegion(r region, xOverflow int, yOverflow int) int {
 	return area * perimeter
 }
 
-func adjacents(loc advent.Point, xOverflow int, yOverflow int) []advent.Point {
-	adj := []advent.Point{}
-	if loc.X > 0 {
-		// left
-		adj = append(adj, advent.Point{X: loc.X - 1, Y: loc.Y})
+func adjacentsFn(xOverflow, yOverflow int) func(advent.Point) []advent.Point {
+	return func(loc advent.Point) []advent.Point {
+		adj := []advent.Point{}
+		if loc.X > 0 {
+			// left
+			adj = append(adj, advent.Point{X: loc.X - 1, Y: loc.Y})
+		}
+		if loc.X < xOverflow-1 {
+			// right
+			adj = append(adj, advent.Point{X: loc.X + 1, Y: loc.Y})
+		}
+		if loc.Y > 0 {
+			// up
+			adj = append(adj, advent.Point{X: loc.X, Y: loc.Y - 1})
+		}
+		if loc.Y < yOverflow-1 {
+			// down
+			adj = append(adj, advent.Point{X: loc.X, Y: loc.Y + 1})
+		}
+		return adj
 	}
-	if loc.X < xOverflow-1 {
-		// right
-		adj = append(adj, advent.Point{X: loc.X + 1, Y: loc.Y})
-	}
-	if loc.Y > 0 {
-		// up
-		adj = append(adj, advent.Point{X: loc.X, Y: loc.Y - 1})
-	}
-	if loc.Y < yOverflow-1 {
-		// down
-		adj = append(adj, advent.Point{X: loc.X, Y: loc.Y + 1})
-	}
-	return adj
 }
 
 func parsePlantRows() [][]string {
