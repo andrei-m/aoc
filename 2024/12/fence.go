@@ -24,25 +24,15 @@ func main() {
 	for y := range rows {
 		for x := range rows[y] {
 			loc := advent.Point{X: x, Y: y}
-			var reg *region
-
-			for _, adj := range adjacents(loc, xOverflow, yOverflow) {
-				testReg := regions[adj]
-				if testReg != nil && testReg.plant == rows[y][x] {
-					//TODO: make this account for multiple regions that should be merged
-					// found region to join
-					reg = testReg
-					break
-				}
+			_, ok := regions[loc]
+			if ok {
+				// location has been discovered in a region search starting from an earlier loc
+				continue
 			}
-
-			if reg != nil {
-				reg.locs = append(reg.locs, loc)
-			} else {
-				// new region
-				reg = &region{plant: rows[y][x], locs: []advent.Point{loc}}
+			reg := getRegion(loc, rows[y][x], rows, xOverflow, yOverflow)
+			for i := range reg.locs {
+				regions[reg.locs[i]] = &reg
 			}
-			regions[loc] = reg
 		}
 	}
 
@@ -57,14 +47,39 @@ func main() {
 		score += scoreRegion(*region, xOverflow, yOverflow)
 	}
 	fmt.Printf("%d regions part 1: %d\n", len(dedupedRegions), score)
-
-	log.Printf("region at (70,16): %v", *regions[advent.Point{X: 131, Y: 131}])
-	scoreRegion(*regions[advent.Point{X: 131, Y: 131}], xOverflow, yOverflow)
 }
 
 type region struct {
 	plant string
 	locs  []advent.Point
+}
+
+func getRegion(loc advent.Point, plant string, plantRows [][]string, xOverflow int, yOverflow int) region {
+	regionLocs := map[advent.Point]struct{}{}
+	searchRegion(loc, plant, plantRows, regionLocs, xOverflow, yOverflow)
+
+	locs := make([]advent.Point, 0, len(regionLocs))
+	for k := range regionLocs {
+		locs = append(locs, k)
+	}
+	return region{
+		plant: plant,
+		locs:  locs,
+	}
+}
+
+func searchRegion(loc advent.Point, plant string, plantRows [][]string, regionLocs map[advent.Point]struct{}, xOverflow int, yOverflow int) {
+	if plantRows[loc.Y][loc.X] != plant {
+		return
+	}
+	regionLocs[loc] = struct{}{}
+	for _, adj := range adjacents(loc, xOverflow, yOverflow) {
+		// avoid infinite recursion when adjacents visit each other
+		_, visited := regionLocs[adj]
+		if !visited {
+			searchRegion(adj, plant, plantRows, regionLocs, xOverflow, yOverflow)
+		}
+	}
 }
 
 func scoreRegion(r region, xOverflow int, yOverflow int) int {
