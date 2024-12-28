@@ -27,9 +27,11 @@ func main() {
 			var reg *region
 
 			for _, adj := range adjacents(loc, xOverflow, yOverflow) {
-				reg = regions[adj]
-				if reg != nil && reg.plant == rows[y][x] {
+				testReg := regions[adj]
+				if testReg != nil && testReg.plant == rows[y][x] {
+					//TODO: make this account for multiple regions that should be merged
 					// found region to join
+					reg = testReg
 					break
 				}
 			}
@@ -44,22 +46,20 @@ func main() {
 		}
 	}
 
-	//log.Printf("region at (70,16): %v", )
-
 	dedupedRegions := map[*region]struct{}{}
 	for _, region := range regions {
 		reg := region
 		dedupedRegions[reg] = struct{}{}
 	}
-	log.Printf("%d regions", len(dedupedRegions))
 
 	var score int
 	for region := range dedupedRegions {
 		score += scoreRegion(*region, xOverflow, yOverflow)
 	}
-	fmt.Printf("part 1: %d\n", score)
+	fmt.Printf("%d regions part 1: %d\n", len(dedupedRegions), score)
 
-	//scoreRegion(*regions[advent.Point{X: 70, Y: 16}], xOverflow, yOverflow)
+	log.Printf("region at (70,16): %v", *regions[advent.Point{X: 131, Y: 131}])
+	scoreRegion(*regions[advent.Point{X: 131, Y: 131}], xOverflow, yOverflow)
 }
 
 type region struct {
@@ -90,7 +90,7 @@ func scoreRegion(r region, xOverflow int, yOverflow int) int {
 		}
 	}
 
-	log.Printf("area: %d, perimeter: %d", area, perimeter)
+	log.Printf("region %v: area: %d, perimeter: %d", r, area, perimeter)
 	return area * perimeter
 }
 
