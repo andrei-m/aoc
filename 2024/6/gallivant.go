@@ -10,18 +10,9 @@ import (
 	"github.com/andrei-m/aoc/advent"
 )
 
-type direction int
-
-const (
-	up direction = iota
-	right
-	down
-	left
-)
-
 func main() {
 	debug := advent.DebugEnabled()
-	dir := up
+	dir := advent.Up
 	var guardPosition advent.Point
 	obstacles := map[advent.Point]struct{}{}
 
@@ -48,7 +39,7 @@ func main() {
 	originalDirection := dir
 
 	// include the starting position
-	pointsVisited := map[advent.Point][]direction{
+	pointsVisited := map[advent.Point][]advent.Direction{
 		guardPosition: {dir},
 	}
 	for {
@@ -93,8 +84,8 @@ func main() {
 	fmt.Printf("part 2: %d\n", len(addedObstacleLocs))
 }
 
-func createsLoop(guardPosition advent.Point, newObstacle advent.Point, obstacles map[advent.Point]struct{}, dir direction, xOverflow int, yOverflow int) bool {
-	pointsVisited := map[advent.Point][]direction{
+func createsLoop(guardPosition advent.Point, newObstacle advent.Point, obstacles map[advent.Point]struct{}, dir advent.Direction, xOverflow int, yOverflow int) bool {
+	pointsVisited := map[advent.Point][]advent.Direction{
 		guardPosition: {dir},
 	}
 	for {
@@ -124,7 +115,7 @@ func inBounds(p advent.Point, xOverflow int, yOverflow int) bool {
 	return !(p.X < 0 || p.X >= xOverflow || p.Y < 0 || p.Y >= yOverflow)
 }
 
-func drawMap(pos advent.Point, pointsVisited map[advent.Point][]direction, xOverflow int, yOverflow int, obstacles map[advent.Point]struct{}) {
+func drawMap(pos advent.Point, pointsVisited map[advent.Point][]advent.Direction, xOverflow int, yOverflow int, obstacles map[advent.Point]struct{}) {
 	for y := 0; y < yOverflow; y++ {
 		for x := 0; x < xOverflow; x++ {
 			p := advent.Point{X: x, Y: y}
@@ -150,35 +141,35 @@ func drawMap(pos advent.Point, pointsVisited map[advent.Point][]direction, xOver
 	fmt.Printf("pos: %s, points visited: %d", pos, len(pointsVisited))
 }
 
-func nextMove(pos advent.Point, dir direction) advent.Point {
+func nextMove(pos advent.Point, dir advent.Direction) advent.Point {
 	switch dir {
-	case up:
+	case advent.Up:
 		return advent.Point{X: pos.X, Y: pos.Y - 1}
-	case right:
+	case advent.Right:
 		return advent.Point{X: pos.X + 1, Y: pos.Y}
-	case down:
+	case advent.Down:
 		return advent.Point{X: pos.X, Y: pos.Y + 1}
-	case left:
+	case advent.Left:
 		return advent.Point{X: pos.X - 1, Y: pos.Y}
 	}
 	panic("invalid direction")
 }
 
-func nextDirection(dir direction) direction {
+func nextDirection(dir advent.Direction) advent.Direction {
 	switch dir {
-	case up:
-		return right
-	case right:
-		return down
-	case down:
-		return left
-	case left:
-		return up
+	case advent.Up:
+		return advent.Right
+	case advent.Right:
+		return advent.Down
+	case advent.Down:
+		return advent.Left
+	case advent.Left:
+		return advent.Up
 	}
 	panic("invalid direction")
 }
 
-func dirSliceContains(sl []direction, val direction) bool {
+func dirSliceContains(sl []advent.Direction, val advent.Direction) bool {
 	for i := range sl {
 		if sl[i] == val {
 			return true

@@ -68,8 +68,7 @@ type region struct {
 
 var (
 	adjacents   func(advent.Point) []advent.Point
-	adjacentDir func(advent.Point, direction) *advent.Point
-	dirs        = []direction{left, right, down, up}
+	adjacentDir func(advent.Point, advent.Direction) *advent.Point
 )
 
 func getRegion(loc advent.Point, plant string, plantRows [][]string) region {
@@ -134,32 +133,9 @@ func scoreRegionPart2(r region) int {
 	return area * perimeter
 }
 
-type direction int
-
-func (d direction) String() string {
-	switch d {
-	case up:
-		return "up"
-	case down:
-		return "down"
-	case left:
-		return "left"
-	case right:
-		return "right"
-	}
-	return "unknown"
-}
-
-const (
-	up direction = iota
-	right
-	down
-	left
-)
-
 type perimiterVisited struct {
 	loc advent.Point
-	dir direction
+	dir advent.Direction
 }
 
 func perimeterPart2(r region) int {
@@ -172,7 +148,7 @@ func perimeterPart2(r region) int {
 	var perimeter int
 
 	for _, loc := range r.locs {
-		for _, dir := range dirs {
+		for _, dir := range advent.Dirs {
 			key := perimiterVisited{
 				loc: loc,
 				dir: dir,
@@ -196,12 +172,12 @@ func perimeterPart2(r region) int {
 			}
 			//log.Printf("perimeter +=1: %v %s", loc, dir)
 
-			if dir == up || dir == down {
-				perimeterPart2Visit(visited, locLookup, loc, left, dir)
-				perimeterPart2Visit(visited, locLookup, loc, right, dir)
-			} else if dir == left || dir == right {
-				perimeterPart2Visit(visited, locLookup, loc, up, dir)
-				perimeterPart2Visit(visited, locLookup, loc, down, dir)
+			if dir == advent.Up || dir == advent.Down {
+				perimeterPart2Visit(visited, locLookup, loc, advent.Left, dir)
+				perimeterPart2Visit(visited, locLookup, loc, advent.Right, dir)
+			} else if dir == advent.Left || dir == advent.Right {
+				perimeterPart2Visit(visited, locLookup, loc, advent.Up, dir)
+				perimeterPart2Visit(visited, locLookup, loc, advent.Down, dir)
 			}
 		}
 	}
@@ -209,7 +185,7 @@ func perimeterPart2(r region) int {
 	return perimeter
 }
 
-func perimeterPart2Visit(visited map[perimiterVisited]struct{}, locLookup map[advent.Point]struct{}, loc advent.Point, dir direction, perimiterDir direction) {
+func perimeterPart2Visit(visited map[perimiterVisited]struct{}, locLookup map[advent.Point]struct{}, loc advent.Point, dir advent.Direction, perimiterDir advent.Direction) {
 	visited[perimiterVisited{loc: loc, dir: perimiterDir}] = struct{}{}
 	next := adjacentDir(loc, dir)
 	if next == nil {
@@ -253,25 +229,25 @@ func adjacentsFn(xOverflow, yOverflow int) func(advent.Point) []advent.Point {
 	}
 }
 
-func adjacentDirFn(xOverflow, yOverflow int) func(advent.Point, direction) *advent.Point {
-	return func(loc advent.Point, dir direction) *advent.Point {
+func adjacentDirFn(xOverflow, yOverflow int) func(advent.Point, advent.Direction) *advent.Point {
+	return func(loc advent.Point, dir advent.Direction) *advent.Point {
 		switch dir {
-		case left:
+		case advent.Left:
 			if loc.X <= 0 {
 				return nil
 			}
 			return &advent.Point{X: loc.X - 1, Y: loc.Y}
-		case right:
+		case advent.Right:
 			if loc.X >= xOverflow {
 				return nil
 			}
 			return &advent.Point{X: loc.X + 1, Y: loc.Y}
-		case up:
+		case advent.Up:
 			if loc.Y <= 0 {
 				return nil
 			}
 			return &advent.Point{X: loc.X, Y: loc.Y - 1}
-		case down:
+		case advent.Down:
 			if loc.Y >= yOverflow {
 				return nil
 			}
