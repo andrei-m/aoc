@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -43,12 +44,54 @@ func main() {
 		}
 	}
 
-	log.Printf("region at (70,16): %v", *regions[advent.Point{X: 70, Y: 16}])
+	//log.Printf("region at (70,16): %v", )
+
+	dedupedRegions := map[*region]struct{}{}
+	for _, region := range regions {
+		reg := region
+		dedupedRegions[reg] = struct{}{}
+	}
+	log.Printf("%d regions", len(dedupedRegions))
+
+	var score int
+	for region := range dedupedRegions {
+		score += scoreRegion(*region, xOverflow, yOverflow)
+	}
+	fmt.Printf("part 1: %d\n", score)
+
+	//scoreRegion(*regions[advent.Point{X: 70, Y: 16}], xOverflow, yOverflow)
 }
 
 type region struct {
 	plant string
 	locs  []advent.Point
+}
+
+func scoreRegion(r region, xOverflow int, yOverflow int) int {
+	area := len(r.locs)
+
+	locLookup := make(map[advent.Point]struct{}, area)
+	for _, loc := range r.locs {
+		locLookup[loc] = struct{}{}
+	}
+
+	var perimeter int
+	for _, loc := range r.locs {
+		adjs := adjacents(loc, xOverflow, yOverflow)
+		if len(adjs) < 4 {
+			// include edges of border locations in the perimeter
+			perimeter += 4 - len(adjs)
+		}
+		for _, adj := range adjs {
+			_, ok := locLookup[adj]
+			if !ok {
+				perimeter += 1
+			}
+		}
+	}
+
+	log.Printf("area: %d, perimeter: %d", area, perimeter)
+	return area * perimeter
 }
 
 func adjacents(loc advent.Point, xOverflow int, yOverflow int) []advent.Point {
