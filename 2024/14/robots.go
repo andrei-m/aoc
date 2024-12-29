@@ -17,7 +17,9 @@ func main() {
 	robots := mustParseRobots()
 	log.Printf("parsed %d robots", len(robots))
 
+	elapsed := 0
 	for i := 0; i < duration; i++ {
+		elapsed++
 		for j := range robots {
 			robots[j].advance()
 			if debug && j == 0 {
@@ -28,17 +30,17 @@ func main() {
 
 	fmt.Printf("part 1: %d\n", safetyFactor(robots))
 
-	elapsed := 0
+	//TODO: account for the possibility of the Christmas tree in the first 'duration' iterations. Currently, it is assumed to show up after 'duration'
 	for {
+		elapsed++
 		for i := range robots {
 			robots[i].advance()
 		}
-		elapsed++
+
 		positions := map[advent.Point]struct{}{}
 		for i := range robots {
 			positions[robots[i].pos] = struct{}{}
 		}
-
 		maxLength := 0
 		for pos := range positions {
 			cl := chainLength(positions, pos)
