@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/andrei-m/aoc/advent"
 )
@@ -25,6 +27,100 @@ func main() {
 	}
 
 	fmt.Printf("part 1: %d\n", safetyFactor(robots))
+
+	elapsed := 0
+	for {
+		for i := range robots {
+			robots[i].advance()
+		}
+		elapsed++
+		positions := map[advent.Point]struct{}{}
+		for i := range robots {
+			positions[robots[i].pos] = struct{}{}
+		}
+
+		maxLength := 0
+		for pos := range positions {
+			cl := chainLength(positions, pos)
+			if cl > maxLength {
+				maxLength = cl
+			}
+		}
+
+		if maxLength > 200 {
+			draw(robots)
+			fmt.Printf("after %d seconds; longest chain: %d", elapsed, maxLength)
+			fmt.Println()
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
+func chainLength(robotPositions map[advent.Point]struct{}, pos advent.Point) int {
+	visited := map[advent.Point]struct{}{}
+	return searchLength(robotPositions, pos, visited)
+}
+
+func searchLength(robotPositions map[advent.Point]struct{}, pos advent.Point, visited map[advent.Point]struct{}) int {
+	_, robotPresent := robotPositions[pos]
+	if !robotPresent {
+		return 0
+	}
+	_, previouslyVisited := visited[pos]
+	if previouslyVisited {
+		return 0
+	}
+	visited[pos] = struct{}{}
+	chainLength := 1
+	for _, adj := range adjacents(pos) {
+		chainLength += searchLength(robotPositions, adj, visited)
+	}
+	return chainLength
+}
+
+func adjacents(pos advent.Point) []advent.Point {
+	/*
+		horizontal, vertical, and diagonal adjacents ('A') relative to position ('P')
+		AAA
+		APA
+		AAA
+	*/
+	adj := []advent.Point{}
+	if pos.X > 0 {
+		// left
+		adj = append(adj, advent.Point{X: pos.X - 1, Y: pos.Y})
+	}
+	if pos.X < width-1 {
+		// right
+		adj = append(adj, advent.Point{X: pos.X + 1, Y: pos.Y})
+	}
+	if pos.Y > 0 {
+		// up
+		adj = append(adj, advent.Point{X: pos.X, Y: pos.Y - 1})
+	}
+	if pos.Y < height-1 {
+		// down
+		adj = append(adj, advent.Point{X: pos.X, Y: pos.Y + 1})
+	}
+
+	if pos.X > 0 && pos.Y > 0 {
+		// up and left
+		adj = append(adj, advent.Point{X: pos.X - 1, Y: pos.Y - 1})
+	}
+	if pos.X < width-1 && pos.Y < height-1 {
+		// down and right
+		adj = append(adj, advent.Point{X: pos.X + 1, Y: pos.Y + 1})
+	}
+	if pos.X > 0 && pos.Y < height-1 {
+		// down and left
+		adj = append(adj, advent.Point{X: pos.X - 1, Y: pos.Y + 1})
+	}
+	if pos.X < width-1 && pos.Y > 0 {
+		// up and right
+		adj = append(adj, advent.Point{X: pos.X + 1, Y: pos.Y - 1})
+	}
+
+	return adj
 }
 
 func safetyFactor(robots []robot) int {
@@ -77,6 +173,25 @@ func (r *robot) advance() {
 		nextPos.Y = nextPos.Y - height
 	}
 	r.pos = nextPos
+}
+
+func draw(robots []robot) {
+	positions := map[advent.Point]struct{}{}
+	for i := range robots {
+		positions[robots[i].pos] = struct{}{}
+	}
+	for y := 0; y < height; y++ {
+		sb := strings.Builder{}
+		for x := 0; x < width; x++ {
+			_, hasRobot := positions[advent.Point{X: x, Y: y}]
+			if hasRobot {
+				sb.WriteString("R")
+			} else {
+				sb.WriteString(".")
+			}
+		}
+		fmt.Println(sb.String())
+	}
 }
 
 var (
