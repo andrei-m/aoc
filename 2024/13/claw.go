@@ -20,9 +20,11 @@ func main() {
 	scenarios := mustParseScenarios()
 	log.Printf("parsed %d scenarios", len(scenarios))
 
+	const part1MaxPresses = 100
+
 	var tokens int
 	for _, s := range scenarios {
-		sols := getSolutions(s)
+		sols := getSolutions(s, part1MaxPresses)
 		if len(sols) > 0 {
 			sort.Slice(sols, func(i, j int) bool {
 				return sols[i].score() < sols[j].score()
@@ -34,6 +36,17 @@ func main() {
 		}
 	}
 	fmt.Printf("part 1: %d\n", tokens)
+
+	tokens = 0
+	for _, s := range scenarios {
+		s.prizeLoc.X += part2PrizeAddend
+		s.prizeLoc.Y += part2PrizeAddend
+		sols := getSolutions(s, 0)
+		if len(sols) > 0 {
+			tokens += sols[0].score()
+		}
+	}
+	fmt.Printf("part 2: %d\n", tokens)
 }
 
 type solution struct {
@@ -45,17 +58,58 @@ func (s solution) score() int {
 	return s.a*3 + s.b
 }
 
-func getSolutions(scen scenario) []solution {
+func getSolutions(scen scenario, maxPresses int) []solution {
+	/*
+		Cramer's rule applied to:
+		aButtonPresses * aDeltaX + bButtonPresses * bDeltaX = prizeLoc.X
+		aButtonPresses * aDeltaY + bButtonPresses * bDeltaY = prizeLoc.Y
+
+		... to solve for 'aButtonPresses' & 'bButtonPresses'
+
+		matrix for determinant (D):
+		aDeltaX		bDeltaX
+		aDeltaY		bDeltaY
+
+		aDeltaY		bDeltaY
+		aDeltaX		bDeltaX
+
+		matrix D-sub-aButtonPresses (replace prizeLoc constants for aButtonPresses column)
+		prizeLocX	bDeltaX
+		prizeLocY	bDeltaY
+
+		matrix D-sub-bButtonPresses
+		aDeltaX		prizeLocX
+		aDeltaY		prizeLocY
+	*/
 	solutions := []solution{}
 
-	for i := 0; i <= 100; i++ {
-		for j := 0; j <= 100; j++ {
-			if i*scen.aDelta.X+j*scen.bDelta.X == scen.prizeLoc.X && i*scen.aDelta.Y+j*scen.bDelta.Y == scen.prizeLoc.Y {
-				solutions = append(solutions, solution{a: i, b: j})
-			}
-		}
+	det := scen.aDelta.X*scen.bDelta.Y - scen.bDelta.X*scen.aDelta.Y
+	if det == 0 {
+		// no solutions or multiple solutions
+		//TODO: the problem statement implies multiple solutions are possible, but part 1 input did not reveal any
+		return solutions
+	}
+	detSubA := scen.prizeLoc.X*scen.bDelta.Y - scen.bDelta.X*scen.prizeLoc.Y
+	detSubB := scen.aDelta.X*scen.prizeLoc.Y - scen.prizeLoc.X*scen.aDelta.Y
+
+	if detSubA%det != 0 || detSubB%det != 0 {
+		// fractional presses are impossible
+		return solutions
 	}
 
+	a := detSubA / det
+	b := detSubB / det
+	if a < 0 || b < 0 {
+		// negative presses are impossible
+		return solutions
+	}
+
+	if maxPresses > 0 && (a > maxPresses || b > maxPresses) {
+		// discard solutions that exceed the max allowable presses (only set for part 1)
+		return solutions
+	}
+
+	solutions = append(solutions, solution{a: detSubA / det, b: detSubB / det})
 	return solutions
 }
 
@@ -105,6 +159,8 @@ var (
 	bRegex     = regexp.MustCompile(`Button B: X\+(\d+), Y\+(\d+)`)
 	prizeRegex = regexp.MustCompile(`Prize: X=(\d+), Y=(\d+)`)
 )
+
+const part2PrizeAddend = 10000000000000
 
 func mustParseScenario(lines []string) scenario {
 	if len(lines) != 3 {

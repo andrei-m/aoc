@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/andrei-m/aoc/advent"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,4 +20,30 @@ func Test_mustParseScenario(t *testing.T) {
 	assert.Equal(t, 4, scenario.bDelta.Y)
 	assert.Equal(t, 55, scenario.prizeLoc.X)
 	assert.Equal(t, 66, scenario.prizeLoc.Y)
+}
+
+func Test_getSolutions(t *testing.T) {
+	t.Run("scenario 1", func(t *testing.T) {
+		// scenario: {{14 98} {34 36} {296 1062}}; solutions: [{9 5}]: best score: 32
+		scen := scenario{
+			aDelta:   advent.Point{X: 14, Y: 98},
+			bDelta:   advent.Point{X: 34, Y: 36},
+			prizeLoc: advent.Point{X: 296, Y: 1062},
+		}
+		sols := getSolutions(scen, 100)
+		if assert.Len(t, sols, 1) {
+			assert.Equal(t, solution{a: 9, b: 5}, sols[0])
+		}
+	})
+
+	t.Run("scenario 2", func(t *testing.T) {
+		// {{20 42} {43 12} {3325 4172}}; no solution
+		scen := scenario{
+			aDelta:   advent.Point{X: 20, Y: 42},
+			bDelta:   advent.Point{X: 43, Y: 12},
+			prizeLoc: advent.Point{X: 3325, Y: 4172},
+		}
+		sols := getSolutions(scen, 100)
+		assert.Empty(t, sols)
+	})
 }
