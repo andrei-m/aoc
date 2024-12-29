@@ -22,7 +22,7 @@ func Test_mustParseScenario(t *testing.T) {
 	assert.Equal(t, 66, scenario.prizeLoc.Y)
 }
 
-func Test_getSolutions(t *testing.T) {
+func Test_getSolution(t *testing.T) {
 	t.Run("scenario 1", func(t *testing.T) {
 		// scenario: {{14 98} {34 36} {296 1062}}; solutions: [{9 5}]: best score: 32
 		scen := scenario{
@@ -30,9 +30,9 @@ func Test_getSolutions(t *testing.T) {
 			bDelta:   advent.Point{X: 34, Y: 36},
 			prizeLoc: advent.Point{X: 296, Y: 1062},
 		}
-		sols := getSolutions(scen, 100)
-		if assert.Len(t, sols, 1) {
-			assert.Equal(t, solution{a: 9, b: 5}, sols[0])
+		sol := getSolution(scen, 100)
+		if assert.NotNil(t, sol) {
+			assert.Equal(t, solution{a: 9, b: 5}, *sol)
 		}
 	})
 
@@ -43,7 +43,6 @@ func Test_getSolutions(t *testing.T) {
 			bDelta:   advent.Point{X: 43, Y: 12},
 			prizeLoc: advent.Point{X: 3325, Y: 4172},
 		}
-		sols := getSolutions(scen, 100)
-		assert.Empty(t, sols)
+		assert.Nil(t, getSolution(scen, 100))
 	})
 }

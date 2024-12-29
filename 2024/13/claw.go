@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"sort"
 
 	"github.com/andrei-m/aoc/advent"
 )
@@ -24,13 +23,10 @@ func main() {
 
 	var tokens int
 	for _, s := range scenarios {
-		sols := getSolutions(s, part1MaxPresses)
-		if len(sols) > 0 {
-			sort.Slice(sols, func(i, j int) bool {
-				return sols[i].score() < sols[j].score()
-			})
-			log.Printf("scenario: %v; solutions: %v: best score: %d", s, sols, sols[0].score())
-			tokens += sols[0].score()
+		sol := getSolution(s, part1MaxPresses)
+		if sol != nil {
+			log.Printf("scenario: %v; solution: %v: score: %d", s, *sol, sol.score())
+			tokens += sol.score()
 		} else {
 			log.Printf("scenario: %v; no solution", s)
 		}
@@ -41,9 +37,9 @@ func main() {
 	for _, s := range scenarios {
 		s.prizeLoc.X += part2PrizeAddend
 		s.prizeLoc.Y += part2PrizeAddend
-		sols := getSolutions(s, 0)
-		if len(sols) > 0 {
-			tokens += sols[0].score()
+		sol := getSolution(s, 0)
+		if sol != nil {
+			tokens += sol.score()
 		}
 	}
 	fmt.Printf("part 2: %d\n", tokens)
@@ -58,7 +54,7 @@ func (s solution) score() int {
 	return s.a*3 + s.b
 }
 
-func getSolutions(scen scenario, maxPresses int) []solution {
+func getSolution(scen scenario, maxPresses int) *solution {
 	/*
 		Cramer's rule applied to:
 		aButtonPresses * aDeltaX + bButtonPresses * bDeltaX = prizeLoc.X
@@ -81,36 +77,33 @@ func getSolutions(scen scenario, maxPresses int) []solution {
 		aDeltaX		prizeLocX
 		aDeltaY		prizeLocY
 	*/
-	solutions := []solution{}
-
 	det := scen.aDelta.X*scen.bDelta.Y - scen.bDelta.X*scen.aDelta.Y
 	if det == 0 {
 		// no solutions or multiple solutions
 		//TODO: the problem statement implies multiple solutions are possible, but part 1 input did not reveal any
-		return solutions
+		return nil
 	}
 	detSubA := scen.prizeLoc.X*scen.bDelta.Y - scen.bDelta.X*scen.prizeLoc.Y
 	detSubB := scen.aDelta.X*scen.prizeLoc.Y - scen.prizeLoc.X*scen.aDelta.Y
 
 	if detSubA%det != 0 || detSubB%det != 0 {
 		// fractional presses are impossible
-		return solutions
+		return nil
 	}
 
 	a := detSubA / det
 	b := detSubB / det
 	if a < 0 || b < 0 {
 		// negative presses are impossible
-		return solutions
+		return nil
 	}
 
 	if maxPresses > 0 && (a > maxPresses || b > maxPresses) {
 		// discard solutions that exceed the max allowable presses (only set for part 1)
-		return solutions
+		return nil
 	}
 
-	solutions = append(solutions, solution{a: detSubA / det, b: detSubB / det})
-	return solutions
+	return &solution{a: detSubA / det, b: detSubB / det}
 }
 
 type scenario struct {
