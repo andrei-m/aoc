@@ -19,7 +19,7 @@ func Test_scoreRegionPart2(t *testing.T) {
 			 area: 12
 			 expected perimeter: 12
 		*/
-		adjacentDir = adjacentDirFn(144, 144)
+		adjacentDir = advent.AdjacentDirFn(144, 144)
 		r := region{
 			plant: "H",
 			locs: []advent.Point{

@@ -20,7 +20,7 @@ func main() {
 	xOverflow := len(rows[0])
 	yOverflow := len(rows)
 	adjacents = adjacentsFn(xOverflow, yOverflow)
-	adjacentDir = adjacentDirFn(xOverflow, yOverflow)
+	adjacentDir = advent.AdjacentDirFn(xOverflow, yOverflow)
 	log.Printf("x Overflow: %d; yOverflow: %d", xOverflow, yOverflow)
 
 	regions := map[advent.Point]*region{}
@@ -226,35 +226,6 @@ func adjacentsFn(xOverflow, yOverflow int) func(advent.Point) []advent.Point {
 			adj = append(adj, advent.Point{X: loc.X, Y: loc.Y + 1})
 		}
 		return adj
-	}
-}
-
-func adjacentDirFn(xOverflow, yOverflow int) func(advent.Point, advent.Direction) *advent.Point {
-	return func(loc advent.Point, dir advent.Direction) *advent.Point {
-		switch dir {
-		case advent.Left:
-			if loc.X <= 0 {
-				return nil
-			}
-			return &advent.Point{X: loc.X - 1, Y: loc.Y}
-		case advent.Right:
-			if loc.X >= xOverflow {
-				return nil
-			}
-			return &advent.Point{X: loc.X + 1, Y: loc.Y}
-		case advent.Up:
-			if loc.Y <= 0 {
-				return nil
-			}
-			return &advent.Point{X: loc.X, Y: loc.Y - 1}
-		case advent.Down:
-			if loc.Y >= yOverflow {
-				return nil
-			}
-			return &advent.Point{X: loc.X, Y: loc.Y + 1}
-		default:
-			panic("invalid direction")
-		}
 	}
 }
 
