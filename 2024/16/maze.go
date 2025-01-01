@@ -13,6 +13,14 @@ import (
 func main() {
 	m, start, end := mustParseInput(os.Stdin)
 	log.Printf("%dx%d maze; start: %v; end: %v", len(m[0]), len(m), start, end)
+
+	/*
+		Use advent.Direction for geographic directions (advent.Right=="East" etc)
+		From the starting position & Direction, build a graph of traversable paths. Include the traversal direction in each edge.
+		Use Djikstra's algorithm with the following distance function:
+		- Traversal in the same direction == 1
+		- Traversal in a 90 degree direction == 1001
+	*/
 }
 
 type object int
