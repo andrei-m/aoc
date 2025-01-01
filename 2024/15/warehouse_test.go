@@ -1,22 +1,11 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-/*
-func Test_debugPart2(t *testing.T) {
-
-	f, err := os.Open("/path/to/input")
-	require.NoError(t, err)
-	defer f.Close()
-
-	m, dirs := mustParseInput(f)
-	part2(m, dirs)
-}
-*/
 
 func Test_score(t *testing.T) {
 	m := [][]object{
@@ -32,4 +21,87 @@ func Test_score(t *testing.T) {
 		{wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall},
 	}
 	assert.Equal(t, 9021, score(m))
+}
+
+func Test_part2(t *testing.T) {
+	t.Run("edge case 1", func(t *testing.T) {
+		in := `#######
+#.....#
+#.OO@.#
+#.....#
+#######
+
+<<`
+		r := strings.NewReader(in)
+		m, dirs := mustParseInput(r)
+		s := part2(m, dirs)
+		assert.Equal(t, 406, s)
+	})
+
+	t.Run("edge case 2", func(t *testing.T) {
+		in := `#######
+#.....#
+#.O#..#
+#..O@.#
+#.....#
+#######
+
+<v<<^`
+		r := strings.NewReader(in)
+		m, dirs := mustParseInput(r)
+		s := part2(m, dirs)
+		assert.Equal(t, 509, s)
+	})
+
+	t.Run("edge case 3", func(t *testing.T) {
+		in := `#######
+#.....#
+#.#O..#
+#..O@.#
+#.....#
+#######
+
+<v<^`
+		r := strings.NewReader(in)
+		m, dirs := mustParseInput(r)
+		s := part2(m, dirs)
+		assert.Equal(t, 511, s)
+	})
+
+	t.Run("edge case 4", func(t *testing.T) {
+		in := `######
+#....#
+#.O..#
+#.OO@#
+#.O..#
+#....#
+######
+
+<vv<<^`
+		r := strings.NewReader(in)
+		m, dirs := mustParseInput(r)
+		s := part2(m, dirs)
+		assert.Equal(t, 816, s)
+	})
+
+	t.Run("edge case 5", func(t *testing.T) {
+		in := `#######
+#...#.#
+#.....#
+#.....#
+#.....#
+#.....#
+#.OOO@#
+#.OOO.#
+#..O..#
+#.....#
+#.....#
+#######
+
+v<vv<<^^^^^`
+		r := strings.NewReader(in)
+		m, dirs := mustParseInput(r)
+		s := part2(m, dirs)
+		assert.Equal(t, 2339, s)
+	})
 }

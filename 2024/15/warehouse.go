@@ -46,28 +46,12 @@ func main() {
 		for {
 			vacatedPos, newPos := maybeMove(m, robotPos, dir)
 			if vacatedPos == nil {
-				/*
-					drawMap(m)
-					fmt.Printf("direction #%d: cannot move %s\n", i+1, dir)
-					time.Sleep(1 * time.Second)
-				*/
 				// can't move in direction
 				break
 			}
 			if *vacatedPos == robotPos {
 				// robot moved
 				robotPos = *newPos
-				/*
-					drawMap(m)
-					boxMoveSuffix := ""
-					if boxesMoved == 1 {
-						boxMoveSuffix = " (moved 1 box)"
-					} else if boxesMoved > 1 {
-						boxMoveSuffix = fmt.Sprintf(" (moved %d boxes)", boxesMoved)
-					}
-					fmt.Printf("direction #%d: moved %s%s\n", i+1, dir, boxMoveSuffix)
-					time.Sleep(1 * time.Second)
-				*/
 				break
 			}
 			// moved a box; try moving again
@@ -92,7 +76,8 @@ func main() {
 	part2(originalM, dirs)
 }
 
-func part2(m [][]object, dirs []advent.Direction) {
+func part2(m [][]object, dirs []advent.Direction) int {
+	debugEnabled := advent.DebugEnabled()
 	mPart2 := getPart2Map(m)
 	adjacentDir = advent.AdjacentDirFn(len(mPart2[0]), len(mPart2))
 
@@ -105,6 +90,8 @@ func part2(m [][]object, dirs []advent.Direction) {
 		}
 	}
 
+	drawMap(mPart2)
+
 	for i, dir := range dirs {
 		var nextMoveSuffix string
 		if i < len(dirs)-1 {
@@ -114,26 +101,32 @@ func part2(m [][]object, dirs []advent.Direction) {
 		for {
 			vacatedPos, newPos := maybeMove(mPart2, robotPos, dir)
 			if vacatedPos == nil {
-				drawMap(mPart2)
-				fmt.Printf("(%d,%d) direction #%d: cannot move %s%s\n", robotPos.X, robotPos.Y, i+1, dir, nextMoveSuffix)
-				time.Sleep(1 * time.Second)
+				if debugEnabled {
+					drawMap(mPart2)
+					fmt.Printf("(%d,%d) direction #%d: cannot move %s\n", robotPos.X, robotPos.Y, i+1, dir)
+					fmt.Printf("score: %d%s\n", score(mPart2), nextMoveSuffix)
+					time.Sleep(1 * time.Second)
+				}
 				// can't move in direction
 				break
 			}
 			if *vacatedPos == robotPos {
 				// robot moved
 				robotPos = *newPos
-				drawMap(mPart2)
+				if debugEnabled {
+					drawMap(mPart2)
 
-				boxMoveSuffix := ""
-				if boxesMoved == 1 {
-					boxMoveSuffix = " (moved 1 box)"
-				} else if boxesMoved > 1 {
-					boxMoveSuffix = fmt.Sprintf(" (moved %d boxes)", boxesMoved)
+					boxMoveSuffix := ""
+					if boxesMoved == 1 {
+						boxMoveSuffix = " (moved 1 box)"
+					} else if boxesMoved > 1 {
+						boxMoveSuffix = fmt.Sprintf(" (moved %d boxes)", boxesMoved)
+					}
+					fmt.Printf("(%d,%d) direction #%d: moved %s%s\n", robotPos.X, robotPos.Y, i+1, dir, boxMoveSuffix)
+					fmt.Printf("score: %d%s\n", score(mPart2), nextMoveSuffix)
+
+					time.Sleep(1 * time.Second)
 				}
-				fmt.Printf("(%d,%d) direction #%d: moved %s%s%s\n", robotPos.X, robotPos.Y, i+1, dir, boxMoveSuffix, nextMoveSuffix)
-
-				time.Sleep(1 * time.Second)
 				break
 			}
 			// moved a box; try moving again
@@ -141,7 +134,10 @@ func part2(m [][]object, dirs []advent.Direction) {
 		}
 	}
 
-	fmt.Printf("part 2: %d\n", score(mPart2))
+	drawMap(mPart2)
+	s := score(mPart2)
+	fmt.Printf("part 2: %d\n", s)
+	return s
 }
 
 var adjacentDir func(advent.Point, advent.Direction) *advent.Point
@@ -160,8 +156,14 @@ func maybeMove(m [][]object, pos advent.Point, dir advent.Direction) (*advent.Po
 		return &pos, adj
 	case wall:
 		return nil, nil
-	case box, boxLeft, boxRight:
-		return maybeMoveBox(m, *adj, dir)
+	case box:
+		return maybeMove(m, *adj, dir)
+	case boxLeft, boxRight:
+		if adjacentBoxesMovable(m, *adj, dir) {
+			return maybeMoveBox(m, *adj, dir)
+		} else {
+			return nil, nil
+		}
 	default:
 		log.Fatalf("unexpected object at position (%d,%d)", adj.X, adj.Y)
 	}
@@ -169,11 +171,6 @@ func maybeMove(m [][]object, pos advent.Point, dir advent.Direction) (*advent.Po
 }
 
 func maybeMoveBox(m [][]object, pos advent.Point, dir advent.Direction) (*advent.Point, *advent.Point) {
-	if m[pos.Y][pos.X] == box {
-		// 1x1 boxes use the same movement rules as robots
-		return maybeMove(m, pos, dir)
-	}
-
 	var posLeft, posRight advent.Point
 	if m[pos.Y][pos.X] == boxLeft {
 		posLeft = pos
@@ -239,6 +236,63 @@ func maybeMoveBox(m [][]object, pos advent.Point, dir advent.Direction) (*advent
 	}
 
 	return nil, nil
+}
+
+// Check if all boxes in the adjacency tree starting at 'point' and going in 'direction' are movable
+func adjacentBoxesMovable(m [][]object, pos advent.Point, dir advent.Direction) bool {
+	var posLeft, posRight advent.Point
+	if m[pos.Y][pos.X] == boxLeft {
+		posLeft = pos
+		posRight = *adjacentDir(pos, advent.Right)
+	} else if m[pos.Y][pos.X] == boxRight {
+		posLeft = *adjacentDir(pos, advent.Left)
+		posRight = pos
+	} else {
+		log.Fatalf("(%d,%d) does not contain a box", pos.X, pos.Y)
+	}
+
+	adjLeft := adjacentDir(posLeft, dir)
+	adjRight := adjacentDir(posRight, dir)
+	switch dir {
+	case advent.Down, advent.Up:
+		if adjLeft == nil || adjRight == nil {
+			return false
+		}
+		if m[adjLeft.Y][adjLeft.X] == wall || m[adjRight.Y][adjRight.X] == wall {
+			return false
+		}
+		movable := true
+		if m[adjLeft.Y][adjLeft.X] == boxLeft || m[adjLeft.Y][adjLeft.X] == boxRight || m[adjLeft.Y][adjLeft.X] == box {
+			movable = movable && adjacentBoxesMovable(m, *adjLeft, dir)
+		}
+		if m[adjRight.Y][adjRight.X] == boxRight || m[adjRight.Y][adjRight.X] == boxLeft || m[adjRight.Y][adjRight.X] == box {
+			movable = movable && adjacentBoxesMovable(m, *adjRight, dir)
+		}
+		return movable
+	case advent.Left:
+		if adjLeft == nil {
+			return false
+		}
+		if m[adjLeft.Y][adjLeft.X] == wall {
+			return false
+		}
+		if m[adjLeft.Y][adjLeft.X] == boxRight || m[adjLeft.Y][adjLeft.X] == box {
+			return adjacentBoxesMovable(m, *adjLeft, dir)
+		}
+		return true
+	case advent.Right:
+		if adjRight == nil {
+			return false
+		}
+		if m[adjRight.Y][adjRight.X] == wall {
+			return false
+		}
+		if m[adjRight.Y][adjRight.X] == boxLeft || m[adjRight.Y][adjRight.X] == box {
+			return adjacentBoxesMovable(m, *adjRight, dir)
+		}
+		return true
+	}
+	return false
 }
 
 func score(m [][]object) int {
