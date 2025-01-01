@@ -12,6 +12,13 @@ import (
 
 func main() {
 	m, dirs := mustParseInput()
+	originalM := make([][]object, len(m))
+	for y := range m {
+		row := make([]object, len(m[y]))
+		copy(row, m[y])
+		originalM[y] = row
+	}
+
 	log.Printf("map: %dx%d with %d directions", len(m[0]), len(m), len(dirs))
 	adjacentDir = advent.AdjacentDirFn(len(m[0]), len(m))
 
@@ -67,6 +74,24 @@ func main() {
 	}
 
 	fmt.Printf("part 1: %d\n", score(m))
+
+	/*
+		part2:
+		A robot can move into an adjacent space iff:
+			- the adjacent space is empty
+			- the adjacent space has a movable box
+		A box can move left or right iff:
+			- the adjacent space is empty
+			- the adjacent space has a movable box
+		A box can move up or down iff:
+			- both adjacent spaces are empty or contain movable boxes
+		left and right halves of boxes must move together
+	*/
+
+	log.Printf("%v", originalM)
+	mPart2 := getPart2Map(originalM)
+	drawMap(originalM)
+	drawMap(mPart2)
 }
 
 var adjacentDir func(advent.Point, advent.Direction) *advent.Point
@@ -109,6 +134,8 @@ const (
 	empty object = iota
 	wall
 	box
+	boxLeft
+	boxRight
 	robot
 )
 
@@ -188,6 +215,10 @@ func drawMap(m [][]object) {
 				sb.WriteString(".")
 			case box:
 				sb.WriteString("O")
+			case boxLeft:
+				sb.WriteString("[")
+			case boxRight:
+				sb.WriteString("]")
 			case wall:
 				sb.WriteString("#")
 			case robot:
@@ -196,4 +227,31 @@ func drawMap(m [][]object) {
 		}
 		fmt.Println(sb.String())
 	}
+}
+
+func getPart2Map(m [][]object) [][]object {
+	result := make([][]object, len(m))
+	for y := range m {
+		row := make([]object, len(m[y])*2)
+		for x := range m[y] {
+			switch m[y][x] {
+			case empty:
+				row[x*2] = empty
+				row[x*2+1] = empty
+			case box:
+				row[x*2] = boxLeft
+				row[x*2+1] = boxRight
+			case wall:
+				row[x*2] = wall
+				row[x*2+1] = wall
+			case robot:
+				row[x*2] = robot
+				row[x*2+1] = empty
+			default:
+				log.Fatalf("unexpected object at (%d,%d)", x, y)
+			}
+		}
+		result[y] = row
+	}
+	return result
 }
