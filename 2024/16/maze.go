@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 
 func main() {
 	m, start, end := mustParseInput(os.Stdin)
+	adjacencts = advent.AdjacentsFn(len(m[0]), len(m))
 	log.Printf("%dx%d maze; start: %v; end: %v", len(m[0]), len(m), start, end)
 
 	/*
@@ -21,6 +23,155 @@ func main() {
 		- Traversal in the same direction == 1
 		- Traversal in a 90 degree direction == 1001
 	*/
+
+	pathGraph := getPathGraph(m, start)
+	log.Printf("%v", pathGraph[advent.Point{X: 3, Y: 1}])
+	log.Printf("%v", pathGraph[start])
+	log.Printf("%v", pathGraph[end])
+
+	path := getShortestPaths(pathGraph, start, advent.Right)
+	log.Printf("%v: %v", end, path[end])
+
+}
+
+// Build a map of destination->traversal cost/previous path step for each destination reachable from 'start' using Djikstra's algorithm
+func getShortestPaths(pathGraph map[advent.Point][]advent.Point, start advent.Point, initialDir advent.Direction) map[advent.Point]*traversal {
+	debugEnabled := advent.DebugEnabled()
+	distances := map[advent.Point]*traversal{}
+	toVisit := map[advent.Point]struct{}{}
+	visited := map[advent.Point]struct{}{}
+
+	for node := range pathGraph {
+		distances[node] = &traversal{cost: inf}
+		toVisit[node] = struct{}{}
+	}
+	// initial distances from 'start' (direction cannot be determined from previous node)
+	distances[start].cost = 0
+
+	// Visit each element of 'toVisit' in priority order, according to lowest cost in 'distances'
+	for {
+		if len(toVisit) == 0 {
+			// visited all nodes
+			break
+		}
+
+		lowestCost := inf
+		var lowestCostNode advent.Point
+		for loc := range toVisit {
+			if distances[loc].cost < lowestCost {
+				lowestCost = distances[loc].cost
+				lowestCostNode = loc
+			}
+		}
+		if debugEnabled {
+			log.Printf("lowest cost node: %v", lowestCostNode)
+		}
+
+		for i := range pathGraph[lowestCostNode] {
+			adj := pathGraph[lowestCostNode][i]
+			_, previouslyVisited := visited[adj]
+			if previouslyVisited {
+				continue
+			}
+
+			lcnTraversal := distances[lowestCostNode]
+			var edgeCost int
+			var newDir advent.Direction
+			if lcnTraversal.previousNode != nil {
+				edgeCost, newDir = cost(lowestCostNode, adj, *lcnTraversal.dir)
+			} else {
+				// starting node
+				edgeCost, newDir = cost(start, adj, initialDir)
+			}
+
+			if edgeCost < distances[adj].cost {
+				previousCost := distances[adj].cost
+				distances[adj].cost = lcnTraversal.cost + edgeCost
+				distances[adj].previousNode = &lowestCostNode
+				distances[adj].dir = &newDir
+				if debugEnabled {
+					log.Printf("found lower cost %d (from %d) to get to %v (from %v; new direction: %v)", distances[adj].cost, previousCost, adj, lowestCostNode, newDir)
+				}
+			}
+		}
+
+		delete(toVisit, lowestCostNode)
+		visited[lowestCostNode] = struct{}{}
+	}
+
+	return distances
+}
+
+// Calculate the cost and new direction of a potential edge traversal
+func cost(previousNode advent.Point, nextNode advent.Point, previousDirection advent.Direction) (int, advent.Direction) {
+	dX := nextNode.X - previousNode.X
+	dY := nextNode.Y - previousNode.Y
+	if advent.Abs(dX)+advent.Abs(dY) != 1 {
+		log.Fatalf("%v and %v are not adjacent", previousNode, nextNode)
+	}
+
+	var newDirection advent.Direction
+	if dX == -1 {
+		newDirection = advent.Left
+	} else if dX == 1 {
+		newDirection = advent.Right
+	} else if dY == -1 {
+		newDirection = advent.Up
+	} else if dY == 1 {
+		newDirection = advent.Down
+	} else {
+		log.Fatalf("unexpected dX: %d or dY: %d", dX, dY)
+	}
+
+	if newDirection == previousDirection {
+		return 1, newDirection
+	} else if (previousDirection == advent.Down || previousDirection == advent.Up) && (newDirection == advent.Left || newDirection == advent.Right) {
+		return 1001, newDirection
+	} else if (previousDirection == advent.Left || previousDirection == advent.Right) && (newDirection == advent.Up || newDirection == advent.Down) {
+		return 1001, newDirection
+	} else if (previousDirection == advent.Up && newDirection == advent.Down) ||
+		(previousDirection == advent.Down && newDirection == advent.Up) ||
+		(previousDirection == advent.Left && newDirection == advent.Right) ||
+		(previousDirection == advent.Right && newDirection == advent.Left) {
+		return 2001, newDirection
+	}
+
+	log.Fatalf("unexpected direction traversal from %s to %s", previousDirection, newDirection)
+	return 0, newDirection
+}
+
+type traversal struct {
+	cost         int
+	previousNode *advent.Point
+	dir          *advent.Direction
+}
+
+const inf = math.MaxInt
+
+var adjacencts func(pos advent.Point) []advent.Point
+
+func getPathGraph(m [][]object, start advent.Point) map[advent.Point][]advent.Point {
+	g := map[advent.Point][]advent.Point{}
+	toVisit := []advent.Point{start}
+	for {
+		if len(toVisit) == 0 {
+			break
+		}
+		current := toVisit[0]
+		toVisit = toVisit[1:]
+
+		_, visited := g[current]
+		if visited {
+			continue
+		}
+		for _, adj := range adjacencts(current) {
+			if m[adj.Y][adj.X] != wall {
+				g[current] = append(g[current], adj)
+				toVisit = append(toVisit, adj)
+			}
+		}
+	}
+	return g
 }
 
 type object int

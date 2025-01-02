@@ -19,7 +19,7 @@ func main() {
 
 	xOverflow := len(rows[0])
 	yOverflow := len(rows)
-	adjacents = adjacentsFn(xOverflow, yOverflow)
+	adjacents = advent.AdjacentsFn(xOverflow, yOverflow)
 	adjacentDir = advent.AdjacentDirFn(xOverflow, yOverflow)
 	log.Printf("x Overflow: %d; yOverflow: %d", xOverflow, yOverflow)
 
@@ -204,29 +204,6 @@ func perimeterPart2Visit(visited map[perimiterVisited]struct{}, locLookup map[ad
 		}
 	}
 	perimeterPart2Visit(visited, locLookup, *next, dir, perimiterDir)
-}
-
-func adjacentsFn(xOverflow, yOverflow int) func(advent.Point) []advent.Point {
-	return func(loc advent.Point) []advent.Point {
-		adj := []advent.Point{}
-		if loc.X > 0 {
-			// left
-			adj = append(adj, advent.Point{X: loc.X - 1, Y: loc.Y})
-		}
-		if loc.X < xOverflow-1 {
-			// right
-			adj = append(adj, advent.Point{X: loc.X + 1, Y: loc.Y})
-		}
-		if loc.Y > 0 {
-			// up
-			adj = append(adj, advent.Point{X: loc.X, Y: loc.Y - 1})
-		}
-		if loc.Y < yOverflow-1 {
-			// down
-			adj = append(adj, advent.Point{X: loc.X, Y: loc.Y + 1})
-		}
-		return adj
-	}
 }
 
 func parsePlantRows() [][]string {

@@ -67,3 +67,26 @@ func AdjacentDirFn(xOverflow, yOverflow int) func(Point, Direction) *Point {
 		}
 	}
 }
+
+func AdjacentsFn(xOverflow, yOverflow int) func(Point) []Point {
+	return func(loc Point) []Point {
+		adj := []Point{}
+		if loc.X > 0 {
+			// left
+			adj = append(adj, Point{X: loc.X - 1, Y: loc.Y})
+		}
+		if loc.X < xOverflow-1 {
+			// right
+			adj = append(adj, Point{X: loc.X + 1, Y: loc.Y})
+		}
+		if loc.Y > 0 {
+			// up
+			adj = append(adj, Point{X: loc.X, Y: loc.Y - 1})
+		}
+		if loc.Y < yOverflow-1 {
+			// down
+			adj = append(adj, Point{X: loc.X, Y: loc.Y + 1})
+		}
+		return adj
+	}
+}
