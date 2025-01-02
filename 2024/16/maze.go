@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -32,6 +33,7 @@ func main() {
 	path := getShortestPaths(pathGraph, start, advent.Right)
 	log.Printf("%v: %v", end, path[end])
 
+	printMap(m, path, start, end)
 }
 
 // Build a map of destination->traversal cost/previous path step for each destination reachable from 'start' using Djikstra's algorithm
@@ -214,4 +216,48 @@ func mustParseInput(r io.Reader) ([][]object, advent.Point, advent.Point) {
 	}
 
 	return m, startPoint, endPoint
+}
+
+func printMap(m [][]object, shortestPath map[advent.Point]*traversal, startPoint advent.Point, endPoint advent.Point) {
+	lines := [][]string{}
+	for y := range m {
+		lines = append(lines, make([]string, len(m[y])))
+		for x := range m[y] {
+			switch m[y][x] {
+			case path:
+				lines[y][x] = "."
+			case wall:
+				lines[y][x] = "#"
+			case start:
+				lines[y][x] = "S"
+			case end:
+				lines[y][x] = "E"
+			}
+		}
+	}
+
+	nextNode := endPoint
+	for {
+		traversal := shortestPath[nextNode]
+		if traversal.previousNode == nil || *traversal.previousNode == startPoint {
+			break
+		}
+		pn := traversal.previousNode
+		var dir string
+		if *traversal.dir == advent.Up {
+			dir = "^"
+		} else if *traversal.dir == advent.Down {
+			dir = "v"
+		} else if *traversal.dir == advent.Left {
+			dir = "<"
+		} else if *traversal.dir == advent.Right {
+			dir = ">"
+		}
+		lines[pn.Y][pn.X] = dir
+		nextNode = *traversal.previousNode
+	}
+
+	for i := range lines {
+		fmt.Println(strings.Join(lines[i], ""))
+	}
 }

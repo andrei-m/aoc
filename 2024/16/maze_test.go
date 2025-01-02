@@ -1,14 +1,6 @@
 package main
 
-import (
-	"log"
-	"os"
-	"testing"
-
-	"github.com/andrei-m/aoc/advent"
-	"github.com/stretchr/testify/require"
-)
-
+/*
 func Test_debug(t *testing.T) {
 	f, err := os.Open("/path/to/input.txt")
 	require.NoError(t, err)
@@ -20,3 +12,4 @@ func Test_debug(t *testing.T) {
 	path := getShortestPaths(pathGraph, start, advent.Right)
 	log.Printf("%v", path)
 }
+*/
