@@ -6,10 +6,10 @@ func Test_debug(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, start, _ := mustParseInput(f)
+	m, start, end := mustParseInput(f)
 	adjacencts = advent.AdjacentsFn(len(m[0]), len(m))
 	pathGraph := getPathGraph(m, start)
 	path := getShortestPaths(pathGraph, start, advent.Right)
-	log.Printf("%v", path)
+	printPath(path, end)
 }
 */

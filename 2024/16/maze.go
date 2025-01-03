@@ -26,14 +26,11 @@ func main() {
 	*/
 
 	pathGraph := getPathGraph(m, start)
-	log.Printf("%v", pathGraph[advent.Point{X: 3, Y: 1}])
-	log.Printf("%v", pathGraph[start])
-	log.Printf("%v", pathGraph[end])
 
 	path := getShortestPaths(pathGraph, start, advent.Right)
-	log.Printf("%v: %v", end, path[end])
 
 	printMap(m, path, start, end)
+	printPath(path, end)
 }
 
 // Build a map of destination->traversal cost/previous path step for each destination reachable from 'start' using Djikstra's algorithm
@@ -259,5 +256,27 @@ func printMap(m [][]object, shortestPath map[advent.Point]*traversal, startPoint
 
 	for i := range lines {
 		fmt.Println(strings.Join(lines[i], ""))
+	}
+}
+
+func printPath(shortestPath map[advent.Point]*traversal, endPoint advent.Point) {
+	type nodeTraversal struct {
+		node advent.Point
+		trav traversal
+	}
+	backwards := []nodeTraversal{}
+	nextNode := endPoint
+	for {
+		trav := shortestPath[nextNode]
+		backwards = append(backwards, nodeTraversal{node: nextNode, trav: *trav})
+		if trav.previousNode == nil {
+			break
+		}
+		nextNode = *trav.previousNode
+	}
+
+	for i := len(backwards) - 1; i >= 0; i-- {
+		nt := backwards[i]
+		log.Printf("%s to %v incurring total cost %d", nt.trav.dir, nt.node, nt.trav.cost)
 	}
 }
