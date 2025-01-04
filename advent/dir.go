@@ -24,3 +24,14 @@ const (
 )
 
 var Dirs = []Direction{Up, Right, Down, Left}
+
+func RotateCounterClockwise(dir Direction) Direction {
+	if dir == Up {
+		return Left
+	}
+	return Direction(int(dir-1) % len(Dirs))
+}
+
+func RotateClockwise(dir Direction) Direction {
+	return Direction(int(dir+1) % len(Dirs))
+}
