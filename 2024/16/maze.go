@@ -28,8 +28,13 @@ func main() {
 	pathGraph := getPathGraph(m, start)
 	path := getShortestPaths(pathGraph, start)
 
-	printMap(m, path, start, end)
-	printPath(path, node{loc: end, dir: advent.Right})
+	//printMap(m, path, start, end)
+	//printPath(path, node{loc: end, dir: advent.Right})
+	fmt.Printf("part 1: %d\n", path[node{loc: end, dir: advent.Right}].cost)
+
+	/*
+		part 2: Keep track of all previous nodes with equally good costs in traversal.previousNode. Starting with 'E', walk the tree and count the distinct nodes collected this way.
+	*/
 }
 
 // Build a map of destination->traversal cost/previous path step for each destination reachable from 'start' using Djikstra's algorithm
@@ -56,6 +61,7 @@ func getShortestPaths(pathGraph map[advent.Point][]node, start advent.Point) map
 			break
 		}
 
+		//TODO: prefer a heap for more efficient priority queue
 		lowestCost := inf
 		var lowestCostNode node
 		for n := range toVisit {
