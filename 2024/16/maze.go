@@ -47,9 +47,6 @@ func getShortestPaths(pathGraph map[advent.Point][]node, start advent.Point) map
 	}
 	// initial distances from 'start' to start, assuming initial direction is East (right)
 	distances[node{loc: start, dir: advent.Right}] = &traversal{cost: 0}
-	distances[node{loc: start, dir: advent.Down}] = &traversal{cost: 1000}
-	distances[node{loc: start, dir: advent.Left}] = &traversal{cost: 2000}
-	distances[node{loc: start, dir: advent.Up}] = &traversal{cost: 1000}
 	toVisit[node{loc: start, dir: advent.Right}] = struct{}{}
 
 	// Visit each element of 'toVisit' in priority order, according to lowest cost in 'distances'
