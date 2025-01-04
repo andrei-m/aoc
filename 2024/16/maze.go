@@ -30,11 +30,14 @@ func main() {
 
 	//printMap(m, path, start, end)
 	//printPath(path, node{loc: end, dir: advent.Right})
-	fmt.Printf("part 1: %d\n", path[node{loc: end, dir: advent.Right}].cost)
+	lastNode := node{loc: end, dir: advent.Right}
+	fmt.Printf("part 1: %d\n", path[lastNode].cost)
+	//fmt.Printf("part 1 alternative?: %d\n", path[node{loc: end, dir: advent.Up}].cost)
 
 	/*
 		part 2: Keep track of all previous nodes with equally good costs in traversal.previousNode. Starting with 'E', walk the tree and count the distinct nodes collected this way.
 	*/
+	fmt.Printf("part 2: %d\n", countIdealPathTiles(path, lastNode))
 }
 
 // Build a map of destination->traversal cost/previous path step for each destination reachable from 'start' using Djikstra's algorithm
@@ -90,10 +93,15 @@ func getShortestPaths(pathGraph map[advent.Point][]node, start advent.Point) map
 				previousCost := distances[adjacentNode].cost
 
 				distances[adjacentNode].cost = fullTraveralCost
-				distances[adjacentNode].previousNode = &lowestCostNode
+				distances[adjacentNode].previousNodes = []node{lowestCostNode}
 
 				if debugEnabled {
 					log.Printf("found lower cost %d (from %d) to get to %v from %v", distances[adjacentNode].cost, previousCost, adjacentNode, lowestCostNode)
+				}
+			} else if fullTraveralCost == distances[adjacentNode].cost {
+				distances[adjacentNode].previousNodes = append(distances[adjacentNode].previousNodes, lowestCostNode)
+				if debugEnabled {
+					log.Printf("found equal cost %d to get to %v from %v", distances[adjacentNode].cost, adjacentNode, lowestCostNode)
 				}
 			}
 		}
@@ -135,8 +143,9 @@ func (n node) String() string {
 }
 
 type traversal struct {
-	cost         int
-	previousNode *node
+	cost int
+	// Previously traversed nodes tied for the same traversal cost
+	previousNodes []node
 }
 
 const inf = math.MaxInt
@@ -181,6 +190,25 @@ func getPathGraph(m [][]object, start advent.Point) map[advent.Point][]node {
 		}
 	}
 	return g
+}
+
+func countIdealPathTiles(shortestPath map[node]*traversal, end node) int {
+	tiles := map[advent.Point]struct{}{}
+	toCount := []node{end}
+
+	for {
+		if len(toCount) == 0 {
+			break
+		}
+		currentNode := toCount[0]
+		toCount = toCount[1:]
+		tiles[currentNode.loc] = struct{}{}
+
+		traversal := shortestPath[currentNode]
+		toCount = append(toCount, traversal.previousNodes...)
+	}
+
+	return len(tiles)
 }
 
 type object int
@@ -263,10 +291,10 @@ func printMap(m [][]object, shortestPath map[node]*traversal, startPoint advent.
 	nextNode := lcnEndpoint
 	for {
 		traversal := shortestPath[nextNode]
-		if traversal.previousNode == nil || traversal.previousNode.loc == startPoint {
+		if len(traversal.previousNodes) == 0 || traversal.previousNodes[0].loc == startPoint {
 			break
 		}
-		pn := traversal.previousNode
+		pn := traversal.previousNodes[0]
 		var dir string
 		if pn.dir == advent.Up {
 			dir = "^"
@@ -278,7 +306,7 @@ func printMap(m [][]object, shortestPath map[node]*traversal, startPoint advent.
 			dir = ">"
 		}
 		lines[pn.loc.Y][pn.loc.X] = dir
-		nextNode = *traversal.previousNode
+		nextNode = traversal.previousNodes[0]
 	}
 
 	for i := range lines {
@@ -296,10 +324,10 @@ func printPath(shortestPath map[node]*traversal, endPoint node) {
 	for {
 		trav := shortestPath[nextNode]
 		backwards = append(backwards, nodeTraversal{n: nextNode, trav: *trav})
-		if trav.previousNode == nil {
+		if len(trav.previousNodes) == 0 {
 			break
 		}
-		nextNode = *trav.previousNode
+		nextNode = trav.previousNodes[0]
 	}
 
 	for i := len(backwards) - 1; i >= 0; i-- {
