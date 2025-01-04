@@ -67,7 +67,8 @@ func getShortestPaths(pathGraph map[advent.Point][]advent.Point, start advent.Po
 		}
 
 		lcnTraversal := distances[lowestCostNode]
-		for i := range pathGraph[lowestCostNode] {
+		adjacents := pathGraph[lowestCostNode]
+		for i := range adjacents {
 			adj := pathGraph[lowestCostNode][i]
 			_, previouslyVisited := visited[adj]
 			if previouslyVisited {
@@ -83,11 +84,14 @@ func getShortestPaths(pathGraph map[advent.Point][]advent.Point, start advent.Po
 				edgeCost, newDir = cost(start, adj, initialDir)
 			}
 
-			if lcnTraversal.cost+edgeCost < distances[adj].cost {
+			fullTraveralCost := lcnTraversal.cost + edgeCost
+			if fullTraveralCost < distances[adj].cost {
 				previousCost := distances[adj].cost
-				distances[adj].cost = lcnTraversal.cost + edgeCost
+
+				distances[adj].cost = fullTraveralCost
 				distances[adj].previousNode = &lowestCostNode
 				distances[adj].dir = &newDir
+
 				if debugEnabled {
 					log.Printf("found lower cost %d (from %d) to get to %v (from %v; new direction: %v)", distances[adj].cost, previousCost, adj, lowestCostNode, newDir)
 				}
