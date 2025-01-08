@@ -30,8 +30,48 @@ const (
 )
 
 type computer struct {
-	regA, regB, regC int
-	program          []int
+	regA, regB, regC   int
+	program            []int
+	instructionPointer int
+}
+
+func (c computer) halt() bool {
+	return c.instructionPointer >= len(c.program)
+}
+
+func (c *computer) advance() {
+	opInt := c.program[c.instructionPointer]
+	if opInt < 0 || opInt > 7 {
+		log.Fatalf("invalid opcode: %d", opInt)
+	}
+	op := opcode(opInt)
+	switch op {
+	case opAdv:
+		// division
+		combo := c.program[c.instructionPointer+1]
+		c.regA = c.regA / (2 << combo)
+		c.instructionPointer += 2
+	case opBxl:
+		// bitwise xor
+	case opJnz:
+		// jump
+	case opBxc:
+		// bitwise xor with registers B+C
+	case opOut:
+		// mod 8
+	case opBdv:
+		// division stored to register B
+		combo := c.program[c.instructionPointer+1]
+		c.regB = c.regA / (2 << combo)
+		c.instructionPointer += 2
+	case opCdv:
+		// division stored to register C
+		combo := c.program[c.instructionPointer+1]
+		c.regC = c.regA / (2 << combo)
+		c.instructionPointer += 2
+	default:
+		log.Fatalf("invalid op: %v", op)
+	}
 }
 
 var (
