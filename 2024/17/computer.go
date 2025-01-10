@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,7 +14,13 @@ import (
 
 func main() {
 	c := mustParseInput(os.Stdin)
-	log.Printf("%v", c)
+	part1(c)
+}
+
+func part1(c computer) {
+	for !c.halt() {
+		c.advance()
+	}
 }
 
 type opcode int
@@ -48,30 +55,63 @@ func (c *computer) advance() {
 	switch op {
 	case opAdv:
 		// division
-		combo := c.program[c.instructionPointer+1]
+		combo := c.comboVal()
 		c.regA = c.regA / (2 << combo)
 		c.instructionPointer += 2
 	case opBxl:
 		// bitwise xor
+		combo := c.comboVal()
+		c.regB = c.regB ^ combo
+		c.instructionPointer += 2
+	case opBst:
+		// combo mod 8
+		combo := c.comboVal()
+		c.regB = combo % 8
+		c.instructionPointer += 2
 	case opJnz:
 		// jump
+		if c.regA != 0 {
+			c.instructionPointer = c.comboVal()
+		}
 	case opBxc:
 		// bitwise xor with registers B+C
+		c.regB = c.regB ^ c.regC
+		c.instructionPointer += 2
 	case opOut:
-		// mod 8
+		// output mod 8
+		val := c.comboVal() % 8
+		fmt.Printf("%d", val)
+		c.instructionPointer += 2
 	case opBdv:
 		// division stored to register B
-		combo := c.program[c.instructionPointer+1]
+		combo := c.comboVal()
 		c.regB = c.regA / (2 << combo)
 		c.instructionPointer += 2
 	case opCdv:
 		// division stored to register C
-		combo := c.program[c.instructionPointer+1]
+		combo := c.comboVal()
 		c.regC = c.regA / (2 << combo)
 		c.instructionPointer += 2
 	default:
 		log.Fatalf("invalid op: %v", op)
 	}
+}
+
+func (c computer) comboVal() int {
+	combo := c.program[c.instructionPointer+1]
+	switch combo {
+	case 0, 1, 2, 3:
+		return combo
+	case 4:
+		return c.regA
+	case 5:
+		return c.regB
+	case 6:
+		return c.regC
+	default:
+		log.Fatalf("invalid combo value: %d", combo)
+	}
+	panic("unreachable")
 }
 
 var (
