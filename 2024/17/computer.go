@@ -15,13 +15,73 @@ import (
 func main() {
 	c := mustParseInput(os.Stdin)
 	part1(&c)
+	part2(&c)
+	/*
+		Part 2 thoughts:
+		- B & C are derived from A at the start of the program, so there is no need to record their states.
+		- The program halts when A is zero, so smaller values of A produce output values that are at the tail of the program's output.
+		- Starting with 0, and working up: try a value of A. Also pick a desired output digit, starting with the last digit of the program.
+			- Record what digit that value of A outputs
+			- If the digit is not the target digit, discard the value of A & try the next one
+			- If it is the target digit, continue to the previous target digit
+			- When the instruction pointer is 0, check if the value of A was previously observed to output to output a value other than the one desired. If so, discard that value of A
+	*/
 }
 
 func part1(c *computer) {
 	for !c.halt() {
 		c.advance()
 	}
+	fmt.Println("part 1:")
 	c.print()
+}
+
+func part2(c *computer) {
+	regA := 0
+	for {
+		if tryRegA(c, regA) {
+			fmt.Println("part 2:")
+			c.print()
+			break
+		} else {
+			if len(c.out) > 8 {
+				log.Printf("%d: %v", regA, c.out)
+			}
+		}
+		regA++
+	}
+}
+
+func tryRegA(c *computer, regA int) bool {
+	c.reset(regA)
+	outLen := 0
+
+	for !c.halt() {
+		c.advance()
+		if len(c.out) > outLen {
+			// a new value was outputted
+			outLen++
+			if !c.checkQuinePrefix() {
+				// try next regA if output is not a prefix of the program (not a quine)
+				return false
+			}
+			if len(c.out) == len(c.program) {
+				// found a prefix that is the full length of the program
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (c *computer) checkQuinePrefix() bool {
+	for i := range c.out {
+		if c.out[i] != c.program[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type opcode int
@@ -73,7 +133,7 @@ func (c computer) print() {
 		}
 		sb.WriteString(fmt.Sprintf("%d", val))
 	}
-	fmt.Printf("part 1: %s\n", sb.String())
+	fmt.Printf("%s\n", sb.String())
 }
 
 func (c computer) halt() bool {
@@ -87,7 +147,7 @@ func (c *computer) advance() {
 	}
 
 	previousState := c.state
-	log.Println(c.String())
+	//log.Println(c.String())
 
 	op := opcode(opInt)
 	switch op {
@@ -156,6 +216,14 @@ func (c computer) comboVal() int {
 		log.Fatalf("invalid combo value: %d", combo)
 	}
 	panic("unreachable")
+}
+
+func (c *computer) reset(regA int) {
+	c.instructionPointer = 0
+	c.regA = regA
+	c.regB = 0
+	c.regC = 0
+	c.out = []int{}
 }
 
 var (
