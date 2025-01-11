@@ -67,7 +67,10 @@ func (c computer) nextInstruction() string {
 
 func (c computer) print() {
 	sb := strings.Builder{}
-	for _, val := range c.out {
+	for i, val := range c.out {
+		if i != 0 {
+			sb.WriteString(",")
+		}
 		sb.WriteString(fmt.Sprintf("%d", val))
 	}
 	fmt.Printf("part 1: %s\n", sb.String())
@@ -95,8 +98,8 @@ func (c *computer) advance() {
 		c.instructionPointer += 2
 	case opBxl:
 		// B = B xor literal
-		combo := c.program[c.instructionPointer+1]
-		c.regB = int(uint(c.regB) ^ uint(combo))
+		lit := c.program[c.instructionPointer+1]
+		c.regB = int(uint(c.regB) ^ uint(lit))
 		c.instructionPointer += 2
 	case opBst:
 		// B = combo % 8
