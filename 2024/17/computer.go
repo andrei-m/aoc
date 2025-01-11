@@ -21,6 +21,7 @@ func part1(c computer) {
 	for !c.halt() {
 		c.advance()
 	}
+	c.print()
 }
 
 type opcode int
@@ -36,10 +37,40 @@ const (
 	opCdv
 )
 
-type computer struct {
+type state struct {
 	regA, regB, regC   int
-	program            []int
 	instructionPointer int
+}
+
+type computer struct {
+	state
+	program []int
+	out     []int
+}
+
+func (c computer) String() string {
+	return fmt.Sprintf("A: %d B: %d C: %d instruction: %d\nout:%v\n%s",
+		c.regA, c.regB, c.regC, c.instructionPointer, c.out, c.nextInstruction())
+}
+
+func (c computer) nextInstruction() string {
+	sb := strings.Builder{}
+	if c.halt() {
+		return sb.String()
+	}
+	sb.WriteString(fmt.Sprintf("next op: %d", c.program[c.instructionPointer]))
+	if c.instructionPointer < len(c.program)-1 {
+		sb.WriteString(fmt.Sprintf(" combo: %d", c.program[c.instructionPointer+1]))
+	}
+	return sb.String()
+}
+
+func (c computer) print() {
+	sb := strings.Builder{}
+	for _, val := range c.out {
+		sb.WriteString(fmt.Sprintf("%d", val))
+	}
+	fmt.Println(sb.String())
 }
 
 func (c computer) halt() bool {
@@ -51,17 +82,21 @@ func (c *computer) advance() {
 	if opInt < 0 || opInt > 7 {
 		log.Fatalf("invalid opcode: %d", opInt)
 	}
+
+	previousState := c.state
+	log.Println(c.String())
+
 	op := opcode(opInt)
 	switch op {
 	case opAdv:
 		// division
 		combo := c.comboVal()
-		c.regA = c.regA / (2 << combo)
+		c.regA = c.regA / (1 << combo)
 		c.instructionPointer += 2
 	case opBxl:
 		// bitwise xor
 		combo := c.comboVal()
-		c.regB = c.regB ^ combo
+		c.regB = int(uint(c.regB) ^ uint(combo))
 		c.instructionPointer += 2
 	case opBst:
 		// combo mod 8
@@ -72,28 +107,34 @@ func (c *computer) advance() {
 		// jump
 		if c.regA != 0 {
 			c.instructionPointer = c.comboVal()
+		} else {
+			c.instructionPointer += 2
 		}
 	case opBxc:
 		// bitwise xor with registers B+C
-		c.regB = c.regB ^ c.regC
+		c.regB = int(uint(c.regB) ^ uint(c.regC))
 		c.instructionPointer += 2
 	case opOut:
 		// output mod 8
 		val := c.comboVal() % 8
-		fmt.Printf("%d", val)
+		c.out = append(c.out, val)
 		c.instructionPointer += 2
 	case opBdv:
 		// division stored to register B
 		combo := c.comboVal()
-		c.regB = c.regA / (2 << combo)
+		c.regB = c.regA / (1 << combo)
 		c.instructionPointer += 2
 	case opCdv:
 		// division stored to register C
 		combo := c.comboVal()
-		c.regC = c.regA / (2 << combo)
+		c.regC = c.regA / (1 << combo)
 		c.instructionPointer += 2
 	default:
 		log.Fatalf("invalid op: %v", op)
+	}
+
+	if c.state == previousState {
+		log.Fatal("infinite loop")
 	}
 }
 
