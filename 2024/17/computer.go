@@ -14,10 +14,10 @@ import (
 
 func main() {
 	c := mustParseInput(os.Stdin)
-	part1(c)
+	part1(&c)
 }
 
-func part1(c computer) {
+func part1(c *computer) {
 	for !c.halt() {
 		c.advance()
 	}
@@ -70,7 +70,7 @@ func (c computer) print() {
 	for _, val := range c.out {
 		sb.WriteString(fmt.Sprintf("%d", val))
 	}
-	fmt.Println(sb.String())
+	fmt.Printf("part 1: %s\n", sb.String())
 }
 
 func (c computer) halt() bool {
@@ -89,29 +89,29 @@ func (c *computer) advance() {
 	op := opcode(opInt)
 	switch op {
 	case opAdv:
-		// division
+		// A = A / 2^combo
 		combo := c.comboVal()
 		c.regA = c.regA / (1 << combo)
 		c.instructionPointer += 2
 	case opBxl:
-		// bitwise xor
-		combo := c.comboVal()
+		// B = B xor literal
+		combo := c.program[c.instructionPointer+1]
 		c.regB = int(uint(c.regB) ^ uint(combo))
 		c.instructionPointer += 2
 	case opBst:
-		// combo mod 8
+		// B = combo % 8
 		combo := c.comboVal()
 		c.regB = combo % 8
 		c.instructionPointer += 2
 	case opJnz:
-		// jump
+		// jump if A != 0
 		if c.regA != 0 {
 			c.instructionPointer = c.comboVal()
 		} else {
 			c.instructionPointer += 2
 		}
 	case opBxc:
-		// bitwise xor with registers B+C
+		// B = B xor C
 		c.regB = int(uint(c.regB) ^ uint(c.regC))
 		c.instructionPointer += 2
 	case opOut:
@@ -120,12 +120,12 @@ func (c *computer) advance() {
 		c.out = append(c.out, val)
 		c.instructionPointer += 2
 	case opBdv:
-		// division stored to register B
+		// B = A / 2^combo
 		combo := c.comboVal()
 		c.regB = c.regA / (1 << combo)
 		c.instructionPointer += 2
 	case opCdv:
-		// division stored to register C
+		// C = A / 2^combo
 		combo := c.comboVal()
 		c.regC = c.regA / (1 << combo)
 		c.instructionPointer += 2
