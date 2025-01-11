@@ -107,9 +107,9 @@ func (c *computer) advance() {
 		c.regB = combo % 8
 		c.instructionPointer += 2
 	case opJnz:
-		// jump if A != 0
+		// jump to literal if A != 0
 		if c.regA != 0 {
-			c.instructionPointer = c.comboVal()
+			c.instructionPointer = c.program[c.instructionPointer+1]
 		} else {
 			c.instructionPointer += 2
 		}
