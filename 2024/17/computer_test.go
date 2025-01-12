@@ -9,12 +9,12 @@ import (
 )
 
 func Test_debug(t *testing.T) {
-	f, err := os.Open("/home/andrei/dev/aoc/2024/17/input.txt")
+	f, err := os.Open("/path/to/input.txt")
 	require.NoError(t, err)
 	defer f.Close()
 
 	c := mustParseInput(f)
-	part1(&c)
+	part2(&c)
 }
 
 func Test_part1(t *testing.T) {
@@ -48,4 +48,12 @@ func Test_part1(t *testing.T) {
 		part1(&c)
 		assert.Equal(t, 44354, c.regB)
 	})
+}
+
+func Test_octalShiftLeft(t *testing.T) {
+	assert.Equal(t, 0, octalShiftLeft(0))
+	assert.Equal(t, 010, octalShiftLeft(01))
+	assert.Equal(t, 0100, octalShiftLeft(010))
+	assert.Equal(t, 030, octalShiftLeft(03))
+	assert.Equal(t, 0130, octalShiftLeft(013))
 }

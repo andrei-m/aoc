@@ -19,12 +19,17 @@ func main() {
 	/*
 		Part 2 thoughts:
 		- B & C are derived from A at the start of the program, so there is no need to record their states.
-		- The program halts when A is zero, so smaller values of A produce output values that are at the tail of the program's output.
-		- Starting with 0, and working up: try a value of A. Also pick a desired output digit, starting with the last digit of the program.
-			- Record what digit that value of A outputs
-			- If the digit is not the target digit, discard the value of A & try the next one
-			- If it is the target digit, continue to the previous target digit
-			- When the instruction pointer is 0, check if the value of A was previously observed to output to output a value other than the one desired. If so, discard that value of A
+		- Each output is one iteration through the main loop. The program halts when A is zero
+		- Bits in A shift to the right as the program progresses. When represented in octal, the octal number is right-shifted by one octet after each output.
+		- After A is populated with a right-shifted value, the next output is consistent with running the program with that value as the starting value in register A
+		- The above means that the output for an octet of A is based only on that octet & more significant octets (not any less significant octets)
+		- The most significant bits of A produce output values that are at the tail end of the program
+		- Outputing len(program) requires len(program) sigificant octets in A
+
+		- Initialize a value for A with len(program) number of octets
+		- Find a value for the first (most-significant) octet that produces the last output value for the program
+			- once found, left shift that octet & find a value of the next octet that produces the last two values of the program (most significant octet corresponds with the last program output)
+			- repeat as a DFS until the len(program) octets are matched
 	*/
 }
 
@@ -44,9 +49,7 @@ func part2(c *computer) {
 			c.print()
 			break
 		} else {
-			if len(c.out) > 8 {
-				log.Printf("%d: %v", regA, c.out)
-			}
+			log.Printf("0o%o: next regA: 0o%o %v ", regA, c.regA, c.out[0:len(c.out)])
 		}
 		regA++
 	}
@@ -82,6 +85,10 @@ func (c *computer) checkQuinePrefix() bool {
 		}
 	}
 	return true
+}
+
+func octalShiftLeft(val int) int {
+	return val * 8
 }
 
 type opcode int
