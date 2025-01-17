@@ -42,49 +42,41 @@ func part1(c *computer) {
 }
 
 func part2(c *computer) {
-	regA := 0
-	for {
-		if tryRegA(c, regA) {
-			fmt.Println("part 2:")
-			c.print()
-			break
-		} else {
-			log.Printf("0o%o: next regA: 0o%o %v ", regA, c.regA, c.out[0:len(c.out)])
-		}
-		regA++
-	}
+	fmt.Printf("part 2: %d\n", searchPart2(c, len(c.program)-1, 0))
 }
 
-func tryRegA(c *computer, regA int) bool {
-	c.reset(regA)
-	outLen := 0
+func searchPart2(c *computer, position int, regA int) int {
+	if position < 0 {
+		return regA
+	}
+	regABase := octalShiftLeft(regA)
+	desired := c.program[position]
 
+	for i := 0; i < 8; i++ {
+		maybeRegA := regABase + i
+		c.reset(maybeRegA)
+		output := getNextOutput(c)
+		if output == desired {
+			log.Printf("position %d output %d: 0o%o", position, output, maybeRegA)
+			// found regA match for the desired positions output; search for the octet to the right
+			searched := searchPart2(c, position-1, maybeRegA)
+			if searched > 0 {
+				return searched
+			}
+		}
+	}
+	// no value of the desired position's octet produces the target value
+	return -1
+}
+
+func getNextOutput(c *computer) int {
 	for !c.halt() {
 		c.advance()
-		if len(c.out) > outLen {
-			// a new value was outputted
-			outLen++
-			if !c.checkQuinePrefix() {
-				// try next regA if output is not a prefix of the program (not a quine)
-				return false
-			}
-			if len(c.out) == len(c.program) {
-				// found a prefix that is the full length of the program
-				return true
-			}
+		if len(c.out) > 0 {
+			return c.out[0]
 		}
 	}
-
-	return false
-}
-
-func (c *computer) checkQuinePrefix() bool {
-	for i := range c.out {
-		if c.out[i] != c.program[i] {
-			return false
-		}
-	}
-	return true
+	panic("no output")
 }
 
 func octalShiftLeft(val int) int {

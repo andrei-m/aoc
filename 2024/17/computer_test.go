@@ -1,13 +1,12 @@
 package main
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+/*
 func Test_debug(t *testing.T) {
 	f, err := os.Open("/path/to/input.txt")
 	require.NoError(t, err)
@@ -16,6 +15,7 @@ func Test_debug(t *testing.T) {
 	c := mustParseInput(f)
 	part2(&c)
 }
+*/
 
 func Test_part1(t *testing.T) {
 	t.Run("scenario 1", func(t *testing.T) {
