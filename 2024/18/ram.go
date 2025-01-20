@@ -28,7 +28,7 @@ func main() {
 		part 2:
 		- Starting at 1024 build the the traversal adjacency graph
 		- attempt DFS or BFS from (0,0) to (70, 70)
-		- if found, apppend the next corruption and try again. If not found, return the most recently added corruption
+		- if found, append the next corruption and try again. If not found, return the most recently added corruption
 	*/
 	part2(corruptions)
 }
