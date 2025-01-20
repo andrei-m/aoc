@@ -7,7 +7,6 @@ func Test_debug(t *testing.T) {
 	defer f.Close()
 
 	corruptions := mustParseInput(f)
-	part1(corruptions)
+	part2(corruptions)
 }
-
 */

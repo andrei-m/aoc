@@ -19,10 +19,18 @@ func main() {
 	/*
 		part 1:
 		- plot the first N (1024) points on a 71x71 grid (0-70 are valid coordinate values). Each point represents corrupted memory.
-		- Model a graph relation starting at (0,0) to span all possible traversals fo of the map. A traversal is possible in D-pad directions unless the adjacent square is corrupted memory.
+		- Model a graph relation starting at (0,0) to span all possible traversals of of the map. A traversal is possible in D-pad directions unless the adjacent square is corrupted memory.
 		- Use Djikstra's algorithm to find a shortest path
 	*/
 	part1(corruptions)
+
+	/*
+		part 2:
+		- Starting at 1024 build the the traversal adjacency graph
+		- attempt DFS or BFS from (0,0) to (70, 70)
+		- if found, apppend the next corruption and try again. If not found, return the most recently added corruption
+	*/
+	part2(corruptions)
 }
 
 func part1(corruptions []advent.Point) {
@@ -34,6 +42,56 @@ func part1(corruptions []advent.Point) {
 	shortestPath := getShortestPath(pathGraph, start)
 	steps := traverseShortestPath(shortestPath, advent.Point{X: xyOverflow - 1, Y: xyOverflow - 1})
 	fmt.Printf("part 1: %d\n", steps)
+}
+
+func part2(corruptions []advent.Point) {
+	xyOverflow := 71
+	adjacencts = advent.AdjacentsFn(xyOverflow, xyOverflow)
+
+	start := advent.Point{X: 0, Y: 0}
+	end := advent.Point{X: 70, Y: 70}
+	corruptionCount := 1024
+	for i := corruptionCount; i <= len(corruptions); i++ {
+		pathGraph := getPathGraph(corruptions[:i], start)
+		if !reachable(pathGraph, start, end) {
+			fmt.Printf("part 2: %s (%d corruptions)\n", corruptions[i-1], i)
+			return
+		}
+	}
+
+	fmt.Printf("exit still reachable after %d corruptions processed", corruptionCount)
+}
+
+func reachable(pathGraph map[advent.Point][]advent.Point, start advent.Point, end advent.Point) bool {
+	toVisit := map[advent.Point]struct{}{
+		start: {},
+	}
+	visited := map[advent.Point]struct{}{}
+
+	for {
+		if len(toVisit) == 0 {
+			return false
+		}
+		var currentNode advent.Point
+		for k := range toVisit {
+			currentNode = k
+			break
+		}
+		delete(toVisit, currentNode)
+
+		nextNodes := pathGraph[currentNode]
+		for _, n := range nextNodes {
+			if n == end {
+				return true
+			}
+
+			_, previouslyVisited := visited[n]
+			if !previouslyVisited {
+				toVisit[n] = struct{}{}
+			}
+		}
+		visited[currentNode] = struct{}{}
+	}
 }
 
 type edge struct {
@@ -107,7 +165,6 @@ func getPathGraph(corruptions []advent.Point, start advent.Point) map[advent.Poi
 	for _, c := range corruptions {
 		corruptionsLookup[c] = struct{}{}
 	}
-	log.Printf("%d corruption obstacles present", len(corruptionsLookup))
 
 	g := map[advent.Point][]advent.Point{}
 	toVisit := []advent.Point{start}
