@@ -26,6 +26,7 @@ func main() {
 	*/
 	towels, patterns := mustParseInput(os.Stdin)
 	fmt.Printf("part 1: %d\n", part1(towels, patterns))
+	fmt.Printf("part 2: %d\n", part2(towels, patterns))
 }
 
 func part1(towels, patterns []string) int {
@@ -33,10 +34,10 @@ func part1(towels, patterns []string) int {
 		return len(towels[i]) > len(towels[j])
 	})
 
-	memo := map[string]bool{}
+	memo := map[string]int{}
 	possiblePatternCount := 0
 	for _, p := range patterns {
-		if isPossible(memo, towels, p) {
+		if countPossibilities(memo, towels, p) > 0 {
 			log.Printf("%s is possible", p)
 			possiblePatternCount++
 		}
@@ -44,14 +45,31 @@ func part1(towels, patterns []string) int {
 	return possiblePatternCount
 }
 
-func isPossible(memo map[string]bool, towels []string, pattern string) bool {
-	possible, found := memo[pattern]
+func part2(towels, patterns []string) int {
+	sort.Slice(towels, func(i, j int) bool {
+		return len(towels[i]) > len(towels[j])
+	})
+
+	memo := map[string]int{}
+	totalPossibilities := 0
+	for _, p := range patterns {
+		possibilities := countPossibilities(memo, towels, p)
+		log.Printf("%s: %d", p, possibilities)
+		totalPossibilities += possibilities
+	}
+	return totalPossibilities
+}
+
+func countPossibilities(memo map[string]int, towels []string, pattern string) int {
+	count, found := memo[pattern]
 	if found {
-		return possible
+		return count
 	}
 	if debug {
 		log.Println(pattern)
 	}
+
+	possibilities := 0
 
 	for _, t := range towels {
 		for i := 0; i+len(t) <= len(pattern); i++ {
@@ -62,25 +80,27 @@ func isPossible(memo map[string]bool, towels []string, pattern string) bool {
 
 				if len(t) == len(pattern) {
 					// no remaining patterns to match on either end of the towel
-					memo[pattern] = true
-					return true
+					possibilities++
 				} else if i > 0 && i+len(t) < len(pattern) {
 					// remaining patterns exist on both ends
-					if isPossible(memo, towels, pattern[0:i]) && isPossible(memo, towels, pattern[i+len(t):]) {
-						memo[pattern] = true
-						return true
+					leftEnd := countPossibilities(memo, towels, pattern[0:i])
+					if leftEnd > 0 {
+						rightEnd := countPossibilities(memo, towels, pattern[i+len(t):])
+						if rightEnd > 0 {
+							possibilities += leftEnd * rightEnd
+						}
 					}
 				} else if i > 0 {
 					// remaining pattern exists the left only
-					if isPossible(memo, towels, pattern[0:i]) {
-						memo[pattern] = true
-						return true
+					leftEnd := countPossibilities(memo, towels, pattern[0:i])
+					if leftEnd > 0 {
+						possibilities += leftEnd
 					}
 				} else {
 					// remaining pattern exists on the right only
-					if isPossible(memo, towels, pattern[i+len(t):]) {
-						memo[pattern] = true
-						return true
+					rightEnd := countPossibilities(memo, towels, pattern[i+len(t):])
+					if rightEnd > 0 {
+						possibilities += rightEnd
 					}
 				}
 			}
@@ -88,10 +108,10 @@ func isPossible(memo map[string]bool, towels []string, pattern string) bool {
 	}
 
 	if debug {
-		log.Printf("%s is not possible", pattern)
+		log.Printf("%s: %d", pattern, possibilities)
 	}
-	memo[pattern] = false
-	return false
+	memo[pattern] = possibilities
+	return possibilities
 }
 
 func mustParseInput(r io.Reader) ([]string, []string) {
