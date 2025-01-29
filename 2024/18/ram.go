@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os"
 	"strings"
 
@@ -39,8 +38,8 @@ func part1(corruptions []advent.Point) {
 
 	start := advent.Point{X: 0, Y: 0}
 	pathGraph := getPathGraph(corruptions[:1024], start)
-	shortestPath := getShortestPath(pathGraph, start)
-	steps := traverseShortestPath(shortestPath, advent.Point{X: xyOverflow - 1, Y: xyOverflow - 1})
+	shortestPath := advent.GetShortestPath(pathGraph, start)
+	steps := advent.TraverseShortestPath(shortestPath, advent.Point{X: xyOverflow - 1, Y: xyOverflow - 1})
 	fmt.Printf("part 1: %d\n", steps)
 }
 
@@ -91,72 +90,6 @@ func reachable(pathGraph map[advent.Point][]advent.Point, start advent.Point, en
 			}
 		}
 		visited[currentNode] = struct{}{}
-	}
-}
-
-type edge struct {
-	cost         int
-	previousNode advent.Point
-}
-
-const inf = math.MaxInt
-
-func getShortestPath(pathGraph map[advent.Point][]advent.Point, start advent.Point) map[advent.Point]edge {
-	distances := map[advent.Point]edge{}
-	toVisit, visited := map[advent.Point]struct{}{}, map[advent.Point]struct{}{}
-
-	for _, adjacents := range pathGraph {
-		for _, adj := range adjacents {
-			distances[adj] = edge{cost: inf}
-			toVisit[adj] = struct{}{}
-		}
-	}
-	distances[start] = edge{cost: 0}
-	toVisit[start] = struct{}{}
-
-	for {
-		if len(toVisit) == 0 {
-			break
-		}
-
-		visitNextCost := inf
-		var visitNext advent.Point
-		for n := range toVisit {
-			if distances[n].cost < visitNextCost {
-				visitNextCost = distances[n].cost
-				visitNext = n
-			}
-		}
-
-		adjacents := pathGraph[visitNext]
-		for _, adj := range adjacents {
-			_, previouslyVisited := visited[adj]
-			if previouslyVisited {
-				continue
-			}
-
-			cost := 1 + visitNextCost
-			if cost < distances[adj].cost {
-				distances[adj] = edge{cost: cost, previousNode: visitNext}
-			}
-		}
-
-		delete(toVisit, visitNext)
-		visited[visitNext] = struct{}{}
-	}
-
-	return distances
-}
-
-func traverseShortestPath(shortestPath map[advent.Point]edge, end advent.Point) int {
-	pos := end
-	steps := 0
-	for {
-		if pos.X == 0 && pos.Y == 0 {
-			return steps
-		}
-		pos = shortestPath[pos].previousNode
-		steps++
 	}
 }
 

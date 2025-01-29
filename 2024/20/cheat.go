@@ -2,17 +2,33 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/andrei-m/aoc/advent"
 )
 
 func main() {
-	maze := mustParseInput(os.Stdin)
+	maze, startPos := mustParseInput(os.Stdin)
 	yOverflow, xOverflow := len(maze), len(maze[0])
-	fmt.Printf("%dx%d grid", xOverflow, yOverflow)
+
+	var endPos advent.Point
+	for y := range maze {
+		for x := range maze[y] {
+			if maze[y][x] == end {
+				endPos = advent.Point{X: x, Y: y}
+			}
+		}
+	}
+	log.Printf("%dx%d grid; start: %s; end: %s", xOverflow, yOverflow, startPos, endPos)
+
+	adjacents = advent.AdjacentsFn(xOverflow, yOverflow)
+	graph := getPathGraph(maze, startPos)
+
+	shortestPath := advent.GetShortestPath(graph, startPos)
+	log.Printf("baseline distance: %d", advent.TraverseShortestPath(shortestPath, endPos))
 
 	/*
 		part 1:
@@ -23,6 +39,36 @@ func main() {
 	*/
 }
 
+func getPathGraph(maze [][]object, startPos advent.Point) map[advent.Point][]advent.Point {
+	g := map[advent.Point][]advent.Point{}
+
+	toVisit := []advent.Point{startPos}
+
+	for {
+		if len(toVisit) == 0 {
+			break
+		}
+		current := toVisit[0]
+		toVisit = toVisit[1:]
+
+		_, visited := g[current]
+		if visited {
+			continue
+		}
+
+		for _, adj := range adjacents(current) {
+			if maze[adj.Y][adj.X] != wall {
+				g[current] = append(g[current], adj)
+				toVisit = append(toVisit, adj)
+			}
+		}
+	}
+
+	return g
+}
+
+var adjacents func(advent.Point) []advent.Point
+
 type object int
 
 const (
@@ -32,8 +78,9 @@ const (
 	end
 )
 
-func mustParseInput(r io.Reader) [][]object {
+func mustParseInput(r io.Reader) ([][]object, advent.Point) {
 	scanner := bufio.NewScanner(r)
+	var startPos advent.Point
 	rows := [][]object{}
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), "")
@@ -46,6 +93,7 @@ func mustParseInput(r io.Reader) [][]object {
 				row[i] = wall
 			case "S":
 				row[i] = start
+				startPos = advent.Point{X: i, Y: len(rows)}
 			case "E":
 				row[i] = end
 			default:
@@ -55,5 +103,5 @@ func mustParseInput(r io.Reader) [][]object {
 		rows = append(rows, row)
 	}
 
-	return rows
+	return rows, startPos
 }
