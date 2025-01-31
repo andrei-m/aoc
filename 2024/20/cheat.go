@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -25,11 +26,10 @@ func main() {
 	log.Printf("%dx%d grid; start: %s; end: %s", xOverflow, yOverflow, startPos, endPos)
 
 	adjacents = advent.AdjacentsFn(xOverflow, yOverflow)
-	graph := getPathGraph(maze, startPos)
+	part1(maze, startPos, endPos)
+}
 
-	shortestPath := advent.GetShortestPath(graph, startPos)
-	log.Printf("baseline distance: %d", advent.TraverseShortestPath(shortestPath, endPos))
-
+func part1(maze [][]object, startPos advent.Point, endPos advent.Point) {
 	/*
 		part 1:
 			disabling colisions still costs movement: 1 picosecond per d-pad move, including through what are normally walls.
@@ -37,6 +37,36 @@ func main() {
 			2. Run Djikstra's algorithm to find the shortest path from S to E. Each edge cost is 1. The number of picoseconds is the baseline
 			3. For each wall inside the perimeter on rows & columns with indices 0 and 140: Replace the wall with a path and re-run steps 1 and 2. If the shortest path is 100 or fewer than the baseline, count the wall as a cheat.
 	*/
+
+	graph := getPathGraph(maze, startPos)
+	shortestPath := advent.GetShortestPath(graph, startPos)
+	distance := advent.TraverseShortestPath(shortestPath, endPos)
+	log.Printf("baseline distance: %d", distance)
+
+	cheatCount := 0
+	// omit border walls from consideration for cheat paths
+	for y := 1; y < len(maze)-1; y++ {
+		for x := 1; x < len(maze[0])-1; x++ {
+			if maze[y][x] != wall {
+				continue
+			}
+			maze[y][x] = path
+			//TODO: it would be more efficient to modify only the adjacents of (x, y) in original graph, then reset that state at the end (rather than rebuilding the whole graph for each iteration)
+			// removeWall(x, y) -> adjacents can navigate to (x, y); (x, y) can navigate to adjacents of (x y)
+			// placeWall(x, y) -> adjacents of (x, y) cannot navigate to (x, y); remove (x, y) as a key from the adjacency graph
+			cheatGraph := getPathGraph(maze, startPos)
+			cheatPath := advent.GetShortestPath(cheatGraph, startPos)
+			cheatDist := advent.TraverseShortestPath(cheatPath, endPos)
+			if cheatDist+100 <= distance {
+				cheatCount++
+			}
+
+			log.Printf("wall at %s: distance %d, cheat count: %d", advent.Point{X: x, Y: y}, cheatDist, cheatCount)
+			maze[y][x] = wall
+		}
+	}
+
+	fmt.Printf("part 1: %d\n", cheatCount)
 }
 
 func getPathGraph(maze [][]object, startPos advent.Point) map[advent.Point][]advent.Point {
