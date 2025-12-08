@@ -24,6 +24,15 @@ func main() {
 		}
 	}
 	fmt.Printf("part 1: %d\n", p1Sum)
+
+	p2Sum := 0
+	for i := range ranges {
+		invalidIDs := getInvalidIDsP2(ranges[i])
+		for j := range invalidIDs {
+			p2Sum += invalidIDs[j]
+		}
+	}
+	fmt.Printf("part 2: %d\n", p2Sum)
 }
 
 func getInvalidIDs(idr idRange) []int {
@@ -42,6 +51,52 @@ func getInvalidIDs(idr idRange) []int {
 		}
 	}
 	return invalidIDs
+}
+
+func getInvalidIDsP2(idr idRange) []int {
+	invalidIDs := []int{}
+	for i := idr.A; i <= idr.B; i++ {
+		if !isValid(i) {
+			invalidIDs = append(invalidIDs, i)
+		}
+	}
+	return invalidIDs
+}
+
+func isValid(val int) bool {
+	// iterate through each sub-sequence from index 0 through len(i)/2 (longer sequences have insufficient space to repeat)
+	// Check if the next len(seq) characters repeat. If so, continue checking subsequent len(seq) characters.
+	// If at least one repetition is found & end of the string is reached, the id is invalid.
+	// If the string has insufficient characters or a non-repetition is encountered, proceed to the next sequence.
+	valStr := strconv.Itoa(val)
+	for i := 0; i < len(valStr)/2; i++ {
+		seq := valStr[0 : i+1]
+		remainder := valStr[len(seq):]
+		if len(remainder) == 0 {
+			return true
+		}
+		if remainderRepeatsSequence(seq, remainder) {
+			return false
+		}
+	}
+	return true
+}
+
+func remainderRepeatsSequence(seq, remainder string) bool {
+	if len(remainder) == 0 {
+		return false
+	}
+	if len(remainder) < len(seq) {
+		return false
+	}
+	if remainder[0:len(seq)] == seq {
+		newRemainder := remainder[len(seq):]
+		if len(newRemainder) == 0 {
+			return true
+		}
+		return remainderRepeatsSequence(seq, newRemainder)
+	}
+	return false
 }
 
 type idRange advent.Pair[int]
