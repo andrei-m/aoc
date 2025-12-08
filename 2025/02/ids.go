@@ -44,6 +44,14 @@ func getInvalidIDs(idr idRange) []int {
 	return invalidIDs
 }
 
+func getInvalidIDsP2(idr idRange) []int {
+	// iterate through each sub-sequence from index 0 through len(i)/2 (longer sequences have insufficient space to repeat)
+	// Check if the next len(seq) characters repeat. If so, continue checking subsequent len(seq) characters.
+	// If at least one repetition is found & end of the string is reached, the id is invalid.
+	// If the string has insufficient characters or a non-repetition is encountered, proceed to the next sequence.
+	return []int{}
+}
+
 type idRange advent.Pair[int]
 
 func mustParseInput(r io.Reader) []idRange {
