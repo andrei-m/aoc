@@ -64,10 +64,6 @@ func getInvalidIDsP2(idr idRange) []int {
 }
 
 func isValid(val int) bool {
-	// iterate through each sub-sequence from index 0 through len(i)/2 (longer sequences have insufficient space to repeat)
-	// Check if the next len(seq) characters repeat. If so, continue checking subsequent len(seq) characters.
-	// If at least one repetition is found & end of the string is reached, the id is invalid.
-	// If the string has insufficient characters or a non-repetition is encountered, proceed to the next sequence.
 	valStr := strconv.Itoa(val)
 	for i := 0; i < len(valStr)/2; i++ {
 		seq := valStr[0 : i+1]
